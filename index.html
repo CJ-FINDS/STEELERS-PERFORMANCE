@@ -36,7 +36,7 @@ tr.warn td{background:#bdbdbd;color:#000}
 .bar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap}
 .bar b{font-size:15px}.bar small{opacity:.75}
 .bar button,.pwbtns button{border:1px solid var(--edge);border-radius:10px;padding:8px 14px;font-weight:700;cursor:pointer;background:#fff;color:#000;margin-left:6px}
-.bar button#clear,.pwbtns button.ghost{background:transparent;color:#fff}
+.bar button#clear,.bar button#export,.pwbtns button.ghost{background:transparent;color:#fff}
 .sheet{overflow:auto;border-radius:10px;background:#fff}
 .sheet table{border-collapse:collapse;border-spacing:0;width:max-content;color:#111}
 .sheet td,.sheet th{border:1px solid #d4d4d4;padding:4px 8px;font-size:12.5px;min-width:90px;height:26px;white-space:nowrap;background:#fff}
@@ -94,7 +94,7 @@ tr.warn td{background:#bdbdbd;color:#000}
 <!-- Data sheet -->
 <div class="modal" id="modal"><div class="panel">
 <div class="bar"><div><b>Data sheet</b> <small>Click a cell and paste (Ctrl+V) your Excel data, headers in row 1</small></div>
-<div><button id="clear">Clear</button><button id="close">Done</button></div></div>
+<div><button id="export" title="Download data.json to publish for all agents">Export data</button><button id="clear">Clear</button><button id="close">Done</button></div></div>
 <div class="sheet" id="sheet"></div></div></div>
 
 <script>
@@ -109,9 +109,9 @@ const PCT=["voicefcr","voiceagentresolution","voiceansweredtakeratecalibrated","
 const norm=s=>String(s==null?"":s).toLowerCase().replace(/[^a-z0-9]/g,"");
 const AGENTS=GROUPS.flatMap(g=>g.names.map(n=>({name:n,id:norm(n),vrr:g.vrr,tag:g.short})));
 let cur=null,unlocked=false,pwThen=null;
-let data=[HDR.slice()],daysAll={};
-try{const d=JSON.parse(localStorage.getItem("ps2_data")||"null");if(d&&d.length)data=d;const k=JSON.parse(localStorage.getItem("ps2_days")||"null");if(k)daysAll=k}catch(e){}
-const save=()=>{try{localStorage.setItem("ps2_data",JSON.stringify(data));localStorage.setItem("ps2_days",JSON.stringify(daysAll))}catch(e){}};
+let data=[HDR.slice()],daysAll={},localTs=0;
+try{const d=JSON.parse(localStorage.getItem("ps2_data")||"null");if(d&&d.length)data=d;const k=JSON.parse(localStorage.getItem("ps2_days")||"null");if(k)daysAll=k;localTs=+localStorage.getItem("ps2_ts")||0}catch(e){}
+const save=()=>{localTs=Date.now();try{localStorage.setItem("ps2_data",JSON.stringify(data));localStorage.setItem("ps2_days",JSON.stringify(daysAll));localStorage.setItem("ps2_ts",String(localTs))}catch(e){}};
 const D=()=>daysAll[cur.id]||(daysAll[cur.id]={w:22,s:22,a:0,l:0});
 const colIdx=n=>(data[0]||[]).findIndex(h=>norm(h)===norm(n));
 const getRow=()=>{const i=colIdx("Agent Name");return i<0||!cur?null:data.slice(1).find(r=>norm(r[i])===norm(cur.name))};
@@ -235,5 +235,25 @@ $id("close").onclick=closeSheet;
 $id("clear").onclick=()=>{if(!unlocked)return askPw();if(!confirm("Clear ALL pasted data for every agent?"))return;data=[[]];save();grid();render()};
 modal.addEventListener("click",e=>{if(e.target===modal)closeSheet()});
 
+$id("export").onclick=()=>{
+if(!unlocked)return askPw();
+const blob=new Blob([JSON.stringify({updated:Date.now(),data:data,days:daysAll})],{type:"application/json"});
+const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="data.json";document.body.appendChild(a);a.click();a.remove();
+setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+alert("data.json downloaded.\n\nUpload it to your GitHub repo (same folder as index.html) and replace the old data.json. Agents will see the update after a few minutes.");
+};
+
+/* ---------- Published data (data.json next to index.html) ---------- */
+function loadPublished(){
+if(location.protocol==="file:")return;
+fetch("data.json?v="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{
+if(!j||!Array.isArray(j.data)||!j.data.length)return;
+if((+j.updated||0)<localTs)return;          // your own newer edits in this browser win
+data=j.data;daysAll=j.days||{};
+if(cur&&!$id("modal").classList.contains("on"))render();
+}).catch(()=>{});
+}
+
 route();
+loadPublished();
 </script></body></html>
