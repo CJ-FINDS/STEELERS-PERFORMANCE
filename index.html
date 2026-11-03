@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Progress Stat</title>
+<style>
+:root{--bg:#000;--card:#0b0b0b;--row:#1a1a1a;--text:#fff;--muted:#a3a3a3;--edge:rgba(255,255,255,.85);--soft:rgba(255,255,255,.22);--red:#dc2626;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--text);background:var(--bg)}
+header{padding:28px 20px 8px;text-align:center;position:relative}
+h1{margin:0;font-size:13px;letter-spacing:.3em;color:var(--muted)}
+h2.agent{margin:6px 0 0;font-size:clamp(22px,4vw,34px);letter-spacing:.04em}
+.tag{margin-top:6px;font-size:11px;letter-spacing:.18em;color:var(--muted)}
+.switch{position:absolute;top:22px;right:20px;border:1px solid var(--edge);background:transparent;color:var(--text);border-radius:10px;padding:8px 14px;font-weight:700;font-size:12px;letter-spacing:.08em;cursor:pointer}
+.switch:hover{background:#fff;color:#000}
+.note{max-width:1200px;margin:10px auto 0;padding:0 20px;text-align:center;font-size:13px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;padding:16px 20px 100px;max-width:1200px;margin:auto}
+.card{background:var(--card);border:1px solid var(--edge);border-radius:20px;padding:18px}
+.card h3{margin:0 0 12px;font-size:15px;letter-spacing:.15em;color:var(--muted)}
+table{width:100%;border-collapse:separate;border-spacing:0 6px}
+td,th{padding:9px 12px;text-align:left;font-size:14px}
+th{font-size:11px;letter-spacing:.1em;color:var(--muted);font-weight:600;padding-top:0;padding-bottom:0}
+tbody td{background:var(--row)}tbody td:first-child{border-radius:10px 0 0 10px}tbody td:last-child{border-radius:0 10px 10px 0}
+td.v{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.yes,.no{display:inline-block;padding:3px 12px;border-radius:99px;font-weight:800;font-size:13px}
+.yes{background:#fff;color:#000}.no{background:var(--red);color:#fff}
+tr.miss td,tr.red td{background:var(--red);color:#fff}
+tr.warn td{background:#bdbdbd;color:#000}
+.edit{width:70px;text-align:right;font:inherit;font-weight:700;color:#fff;background:#000;border:1px solid var(--edge);border-radius:8px;padding:3px 6px}
+.edit[readonly]{cursor:pointer;border-color:var(--soft)}
+.fab{position:fixed;right:max(20px,env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));width:58px;height:58px;border-radius:50%;border:1px solid #000;background:#fff;color:#000;font-size:26px;cursor:pointer;box-shadow:0 8px 28px rgba(255,255,255,.18)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;padding:16px;z-index:5}
+.modal.on{display:flex}
+#pwModal{z-index:10}
+#picker{z-index:20;background:#000;overflow:auto;align-items:flex-start}
+.panel{background:var(--card);border:1px solid var(--edge);border-radius:20px;width:min(1100px,100%);max-height:88vh;display:flex;flex-direction:column;padding:16px;color:#fff}
+.bar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap}
+.bar b{font-size:15px}.bar small{opacity:.75}
+.bar button,.pwbtns button{border:1px solid var(--edge);border-radius:10px;padding:8px 14px;font-weight:700;cursor:pointer;background:#fff;color:#000;margin-left:6px}
+.bar button#clear,.pwbtns button.ghost{background:transparent;color:#fff}
+.sheet{overflow:auto;border-radius:10px;background:#fff}
+.sheet table{border-collapse:collapse;border-spacing:0;width:max-content;color:#111}
+.sheet td,.sheet th{border:1px solid #d4d4d4;padding:4px 8px;font-size:12.5px;min-width:90px;height:26px;white-space:nowrap;background:#fff}
+.sheet th{background:#eee;color:#111;text-align:center;position:sticky;top:0}
+.sheet td.n{background:#eee;color:#111;min-width:34px;text-align:center;position:sticky;left:0}
+.sheet tr:first-of-type td:not(.n){font-weight:700;background:#f5f5f5}
+.sheet td:focus{outline:2px solid #000;outline-offset:-2px}
+/* Name picker */
+.pick{width:min(760px,100%);margin:6vh auto 40px;text-align:center}
+.pick h1{font-size:13px}
+.pick h2{margin:10px 0 6px;font-size:clamp(24px,5vw,36px);letter-spacing:.04em}
+.pick p{margin:0 0 18px;color:var(--muted);font-size:14px}
+.search{width:100%;max-width:420px;font:inherit;font-size:15px;color:#fff;background:#000;border:1px solid var(--edge);border-radius:12px;padding:12px 14px;margin-bottom:22px;text-align:center}
+.grp{margin-bottom:22px;text-align:left}
+.grp h4{margin:0 0 10px;font-size:12px;letter-spacing:.2em;color:var(--muted);border-bottom:1px solid var(--soft);padding-bottom:8px}
+.names{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.names button{font:inherit;font-weight:700;font-size:14px;text-align:left;color:#fff;background:var(--card);border:1px solid var(--edge);border-radius:12px;padding:13px 14px;cursor:pointer}
+.names button:hover{background:#fff;color:#000}
+.empty{color:var(--muted);font-size:14px;padding:10px 0}
+#pwIn{width:100%;font:inherit;font-size:16px;color:#fff;background:#000;border:1px solid var(--edge);border-radius:10px;padding:11px 12px;margin:12px 0 6px}
+#pwErr{min-height:20px;font-size:13px;color:#ff6b6b;font-weight:700}
+.pwbtns{display:flex;justify-content:flex-end;margin-top:8px}
+@media(max-width:560px){.switch{position:static;margin-bottom:10px}}
+</style></head><body>
+<header>
+<button class="switch" id="switch">SWITCH AGENT</button>
+<h1>PROGRESS STAT</h1><h2 class="agent" id="agent"></h2><div class="tag" id="tag"></div>
+</header>
+<div class="note" id="note"></div>
+<div class="grid">
+<div class="card"><h3>MTD TABLE</h3><table id="mtd"></table></div>
+<div class="card"><h3>SALES TABLE</h3><table id="sales"></table></div>
+<div class="card"><h3>KPI TABLE</h3><table id="kpi"></table></div>
+</div>
+<button class="fab" id="fab" title="Open data sheet" aria-label="Open data sheet">&#128214;</button>
+
+<!-- Name picker -->
+<div class="modal on" id="picker"><div class="pick">
+<h1>PROGRESS STAT</h1>
+<h2>Choose your name</h2>
+<p>Tap your name to open your own scoreboard.</p>
+<input class="search" id="search" type="text" placeholder="Search your name…" autocomplete="off">
+<div id="groups"></div>
+</div></div>
+
+<!-- Password prompt -->
+<div class="modal" id="pwModal"><div class="panel" style="width:min(380px,100%)">
+<b>Password required</b>
+<small style="opacity:.75;margin-top:4px">Enter the password to edit or paste data.</small>
+<input id="pwIn" type="password" placeholder="Password" autocomplete="off">
+<div id="pwErr"></div>
+<div class="pwbtns"><button class="ghost" id="pwCancel">Cancel</button><button id="pwOk">Unlock</button></div>
+</div></div>
+
+<!-- Data sheet -->
+<div class="modal" id="modal"><div class="panel">
+<div class="bar"><div><b>Data sheet</b> <small>Click a cell and paste (Ctrl+V) your Excel data, headers in row 1</small></div>
+<div><button id="clear">Clear</button><button id="close">Done</button></div></div>
+<div class="sheet" id="sheet"></div></div></div>
+
+<script>
+const PASSWORD="Christian051026";
+const TAKE_TARGET=.25, ACQ_TARGET=5.85;
+const GROUPS=[
+{label:"TENURED AGENTS",short:"TENURED",vrr:.87,names:["Chino Albarracin","Blessy Anne Opamin","Kint Mabayo","Dean John Mawili","Gestoni Cobar"]},
+{label:"31-90 DAYS",short:"31-90 DAYS",vrr:.93,names:["Rommel Gepitulan","Joann Paler","Carla Lynn Lanada","Archellie Recinto","Dinece Ambra Estella","Julie Luz Baloy","Justine Bustillon","Bill Christian Llevares"]},
+{label:"BELOW 30 DAYS",short:"BELOW 30 DAYS",vrr:.91,names:["Jade Cabiles","Mark Montano","Jag Vosotros"]}];
+const HDR=["Agent Name","Voice Answered","Voice Answered AHT","Voice CSAT","Voice FCR","Voice Agent Resolution","Voice Answered Take Rate (calibrated)","Voice Answered Transfer to Survey % (calibrated)","Voice Handled Transfer % (calibrated)","Status - Pay to Performance","Voice Sentiment Trend Avg","Revenue - Bookings (Post Recoup)","Revenue - ACQ + CROSS (Post Recoup)","Revenue - REN (Post Recoup)"];
+const PCT=["voicefcr","voiceagentresolution","voiceansweredtakeratecalibrated","voiceansweredtransfertosurveycalibrated","voicehandledtransfercalibrated","statuspaytoperformance"];
+const norm=s=>String(s==null?"":s).toLowerCase().replace(/[^a-z0-9]/g,"");
+const AGENTS=GROUPS.flatMap(g=>g.names.map(n=>({name:n,id:norm(n),vrr:g.vrr,tag:g.short})));
+let cur=null,unlocked=false,pwThen=null;
+let data=[HDR.slice()],daysAll={};
+try{const d=JSON.parse(localStorage.getItem("ps2_data")||"null");if(d&&d.length)data=d;const k=JSON.parse(localStorage.getItem("ps2_days")||"null");if(k)daysAll=k}catch(e){}
+const save=()=>{try{localStorage.setItem("ps2_data",JSON.stringify(data));localStorage.setItem("ps2_days",JSON.stringify(daysAll))}catch(e){}};
+const D=()=>daysAll[cur.id]||(daysAll[cur.id]={w:22,s:22,a:0,l:0});
+const colIdx=n=>(data[0]||[]).findIndex(h=>norm(h)===norm(n));
+const getRow=()=>{const i=colIdx("Agent Name");return i<0||!cur?null:data.slice(1).find(r=>norm(r[i])===norm(cur.name))};
+function num(n){const r=getRow(),i=colIdx(n);if(!r||i<0)return NaN;const s=String(r[i]==null?"":r[i]).trim();if(!s)return NaN;let v=parseFloat(s.replace(/[$,%\s]/g,""));if(isNaN(v))return NaN;if(PCT.includes(norm(n))&&(s.includes("%")||v>1))v/=100;return v}
+const ok=v=>!isNaN(v);
+const P=v=>ok(v)?(v*100).toFixed(1)+"%":"—";
+const N=(v,d=0)=>ok(v)?v.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d}):"—";
+const $=v=>ok(v)?"$"+N(v,2):"—";
+const tier=(v,list,dir,last)=>{if(!ok(v))return NaN;for(const[t,s]of list){if(dir>0?v>=t:v<=t)return s}return last};
+const sc={
+aht:v=>tier(v,[[920,1],[930,.9],[939,.8],[949,.7],[959,.6]],-1,.5),
+csat:v=>tier(v,[[4.96,1.1],[4.93,1],[4.89,.9],[4.85,.8]],1,.5),
+res:v=>tier(v,[[.97,1.1],[.94,1],[.92,.9],[.9,.8],[.871,.7]],1,.5),
+trf:v=>tier(v,[[.12,1.1],[.129,1],[.139,.9],[.145,.8],[.149,.7]],-1,.5),
+pay:v=>tier(v,[[.87,1.1],[.83,1],[.8,.9],[.77,.8],[.75,.7],[.73,.6]],1,.5)};
+const lv=(v,t)=>{if(!ok(v))return"";const r=v/t;return r>=.9?"":r>=.8?"warn":"miss"};
+const below=(v,t)=>ok(v)&&v<t?"miss":"";   // red whenever the target is not met
+const ahtC=v=>ok(v)&&v>920?"miss":"";
+const xfC=v=>ok(v)&&v<.55?"red":"";
+const row3=(a,b,c,m)=>`<tr${m?' class="'+m+'"':''}><td>${a}</td><td class="v">${b}</td>${c===undefined?"":`<td class="v">${c}</td>`}</tr>`;
+const badge=q=>q===null?"—":`<span class="${q?"yes":"no"}">${q?"YES":"NO"}</span>`;
+const $id=id=>document.getElementById(id);
+
+function render(){
+if(!cur)return;
+const days=D(),VRR=cur.vrr;
+$id("agent").textContent=cur.name.toUpperCase();
+$id("tag").textContent=cur.tag+" · VRR TARGET "+Math.round(VRR*100)+"%";
+$id("note").textContent=getRow()?"":"No data found for this agent yet. Ask your supervisor to load the latest data.";
+const ans=num("Voice Answered"),aht=num("Voice Answered AHT"),csat=num("Voice CSAT"),fcr=num("Voice FCR"),res=num("Voice Agent Resolution"),take=num("Voice Answered Take Rate (calibrated)"),trf=num("Voice Answered Transfer to Survey % (calibrated)"),pay=num("Status - Pay to Performance"),book=num("Revenue - Bookings (Post Recoup)"),acq=num("Revenue - ACQ + CROSS (Post Recoup)"),ren=num("Revenue - REN (Post Recoup)");
+$id("mtd").innerHTML="<thead><tr><th>METRIC</th><th style='text-align:right'>SCORE</th></tr></thead><tbody>"+
+row3("CALLS",N(ans))+row3("AHT",N(aht),undefined,ahtC(aht))+row3("CSAT",N(csat,2),undefined,lv(csat,4.93))+row3("VRR",P(res),undefined,below(res,VRR))+row3("FCR",P(fcr))+row3("TAKE RATE",P(take),undefined,below(take,TAKE_TARGET))+row3("XFER TO SURVEY",P(trf),undefined,xfC(trf))+row3("TRANSFERS%",P(num("Voice Handled Transfer % (calibrated)")))+row3("P2P",P(pay),undefined,lv(pay,.83))+"</tbody>";
+const tot=ok(acq)&&ok(ren)?acq+ren:NaN,pc=ok(acq)&&ok(ans)&&ans?acq/ans:NaN;
+const miss=ok(pc)?(pc<ACQ_TARGET?ACQ_TARGET*ans-acq:0):NaN;
+let inc=NaN;if(ok(book)){inc=0;const K=[500,1000,2000,3000,3500,4000,4500,5000,5500,6000,6500,7000],V=[1750,3250,4750,5000,5100,5250,5750,6250,6500,7000,7500,8000];K.forEach((k,i)=>{if(book>=k)inc=V[i]})}
+const kick=ok(book)?Math.round(Math.max(book-7000,0)*0.035*60.59*100)/100:NaN;
+const q1=ok(take)&&ok(csat)&&ok(pc)?(take>=TAKE_TARGET&&csat>=4.9&&pc>=ACQ_TARGET):null;
+$id("sales").innerHTML="<thead><tr><th>METRIC</th><th style='text-align:right'>VALUE</th></tr></thead><tbody>"+
+row3("ACQ",$(acq))+row3("RENEWAL",$(ren))+row3("TOTAL",$(tot))+
+row3("$/CALL",$(pc),undefined,below(pc,ACQ_TARGET))+row3("Missing ACQ (target $"+ACQ_TARGET.toFixed(2)+"/call)",$(miss),undefined,below(pc,ACQ_TARGET))+row3("INCENTIVES",$(inc))+row3("KICKER",$(kick))+row3("QUALIFIED?",badge(q1))+"</tbody>";
+const s=[sc.aht(aht),sc.csat(csat),sc.res(res),sc.trf(num("Voice Handled Transfer % (calibrated)")),sc.pay(pay)];
+const abn=n=>n===0?1:n===1?.75:n===2?.5:0;
+const s7=s.concat([abn(days.a),abn(days.l)]);
+const pcnt=s7.every(ok)?s[1]*.2+s[0]*.25+s[2]*.25+s[4]*.15+s[3]*.05+s7[5]*.05+s7[6]*.05:NaN;
+const mult=days.s?days.w/days.s:NaN;
+const q2=q1;
+const sp=v=>ok(v)?Math.round(v*100)+"%":"—";
+const ab=n=>n===0?"100%":n===1?"75%":n===2?"50%":"0%";
+const ro=unlocked?"":" readonly";
+const kpiAmt=p=>p>=.95?5250:p>=.9?5000:p>=.87?4500:p>=.85?2500:p>=.8?1975:0;
+const pr=Math.round(pcnt*1e6)/1e6;
+$id("kpi").innerHTML="<thead><tr><th>METRIC</th><th style='text-align:right'>ACTUAL</th><th style='text-align:right'>SCORE</th></tr></thead><tbody>"+
+`<tr><td>Days Worked</td><td class="v" colspan="2"><input class="edit" type="number" min="0" id="dw" value="${days.w}"${ro}></td></tr>`+
+`<tr><td>Days Scheduled</td><td class="v" colspan="2"><input class="edit" type="number" min="0" id="ds" value="${days.s}"${ro}></td></tr>`+
+row3("AHT",N(aht),sp(s[0]),ahtC(aht))+row3("CSAT",N(csat,2),sp(s[1]),lv(csat,4.93))+row3("VRR",P(res),sp(s[2]),below(res,VRR))+row3("TRANSFER%",P(num("Voice Handled Transfer % (calibrated)")),sp(s[3]))+row3("P2P",P(pay),sp(s[4]),lv(pay,.83))+
+`<tr><td>ABSENCE</td><td class="v"><input class="edit" type="number" min="0" id="da" value="${days.a}"${ro}></td><td class="v">${ab(days.a)}</td></tr>`+`<tr><td>LATE</td><td class="v"><input class="edit" type="number" min="0" id="dl" value="${days.l}"${ro}></td><td class="v">${ab(days.l)}</td></tr>`+
+row3("MULTIPLIER","",sp(mult))+row3("PERCENTAGE","",sp(pcnt))+row3("INITIAL KPI","",$(ok(pr)?kpiAmt(pr):NaN))+row3("FINAL KPI","",$(ok(pr)&&ok(mult)?mult*kpiAmt(pr):NaN))+row3("QUALIFIED?","",badge(q2))+"</tbody>";
+const bind=(id,key,conv)=>{const el=$id(id);el.onclick=()=>{if(!unlocked)askPw(()=>{render();$id(id).focus()})};el.oninput=()=>{if(!unlocked)return;D()[key]=conv(el.value);save();render();$id(id).focus()}};
+bind("dw","w",v=>parseFloat(v)||0);bind("ds","s",v=>parseFloat(v)||0);
+bind("da","a",v=>Math.max(0,parseInt(v)||0));bind("dl","l",v=>Math.max(0,parseInt(v)||0));
+}
+
+/* ---------- Name picker & routing ---------- */
+function buildPicker(filter){
+const f=norm(filter||"");let h="",any=false;
+GROUPS.forEach(g=>{
+const list=g.names.filter(n=>!f||norm(n).includes(f));
+if(!list.length)return;any=true;
+h+=`<div class="grp"><h4>${g.label}</h4><div class="names">`+list.map(n=>`<button data-id="${norm(n)}">${n}</button>`).join("")+`</div></div>`;
+});
+$id("groups").innerHTML=any?h:'<div class="empty">No matching name.</div>';
+}
+$id("groups").addEventListener("click",e=>{const b=e.target.closest("button[data-id]");if(b)location.hash=b.dataset.id});
+$id("search").addEventListener("input",e=>buildPicker(e.target.value));
+function route(){
+const id=decodeURIComponent(location.hash.replace(/^#/,""));
+cur=AGENTS.find(a=>a.id===id)||null;
+unlocked=false;
+if(cur){$id("picker").classList.remove("on");$id("modal").classList.remove("on");render()}
+else{$id("search").value="";buildPicker("");$id("picker").classList.add("on")}
+}
+window.addEventListener("hashchange",route);
+$id("switch").onclick=()=>{location.hash=""};
+
+/* ---------- Password ---------- */
+function askPw(then){
+pwThen=then;$id("pwIn").value="";$id("pwErr").textContent="";
+$id("pwModal").classList.add("on");setTimeout(()=>$id("pwIn").focus(),30);
+}
+function tryPw(){
+if($id("pwIn").value===PASSWORD){unlocked=true;$id("pwModal").classList.remove("on");const f=pwThen;pwThen=null;if(f)f()}
+else{$id("pwErr").textContent="Incorrect password.";$id("pwIn").select()}
+}
+$id("pwOk").onclick=tryPw;
+$id("pwIn").addEventListener("keydown",e=>{if(e.key==="Enter")tryPw();if(e.key==="Escape")$id("pwCancel").click()});
+$id("pwCancel").onclick=()=>{pwThen=null;$id("pwModal").classList.remove("on")};
+
+/* ---------- Data sheet ---------- */
+const colName=c=>{let s="";c++;while(c>0){const m=(c-1)%26;s=String.fromCharCode(65+m)+s;c=Math.floor((c-1)/26)}return s};
+function grid(){
+const R=Math.max(data.length+8,22),C=Math.max(114,...data.map(r=>r.length));
+let h="<table><thead><tr><th></th>";
+for(let c=0;c<C;c++)h+=`<th>${colName(c)}</th>`;
+h+="</tr></thead><tbody>";
+for(let r=0;r<R;r++){h+=`<tr><td class="n">${r+1}</td>`;for(let c=0;c<C;c++){const v=(data[r]&&data[r][c])||"";h+=`<td contenteditable="true" data-r="${r}" data-c="${c}">${String(v).replace(/&/g,"&amp;").replace(/</g,"&lt;")}</td>`}h+="</tr>"}
+$id("sheet").innerHTML=h+"</tbody></table>";
+}
+const sheet=$id("sheet"),modal=$id("modal");
+sheet.addEventListener("input",e=>{if(!unlocked)return;const t=e.target;if(!t.dataset||t.dataset.r===undefined)return;const r=+t.dataset.r,c=+t.dataset.c;while(data.length<=r)data.push([]);data[r][c]=t.textContent;save();render()});
+sheet.addEventListener("paste",e=>{
+const t=e.target.closest("td[data-r]");if(!t)return;e.preventDefault();
+if(!unlocked){askPw();return}
+const txt=(e.clipboardData||window.clipboardData).getData("text");
+const rows=txt.replace(/\r/g,"").replace(/\n+$/,"").split("\n").map(l=>l.split("\t"));
+const r0=+t.dataset.r,c0=+t.dataset.c;
+rows.forEach((cells,i)=>{while(data.length<=r0+i)data.push([]);cells.forEach((v,j)=>{data[r0+i][c0+j]=v.trim()})});
+save();grid();render()});
+const closeSheet=()=>{modal.classList.remove("on");render()};
+$id("fab").onclick=()=>{askPw(()=>{grid();modal.classList.add("on");render()})};
+$id("close").onclick=closeSheet;
+$id("clear").onclick=()=>{if(!unlocked)return askPw();if(!confirm("Clear ALL pasted data for every agent?"))return;data=[[]];save();grid();render()};
+modal.addEventListener("click",e=>{if(e.target===modal)closeSheet()});
+
+route();
+</script></body></html>
