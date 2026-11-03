@@ -22,11 +22,10 @@ th{font-size:11px;letter-spacing:.1em;color:var(--muted);font-weight:600;padding
 tbody td{background:var(--row)}tbody td:first-child{border-radius:10px 0 0 10px}tbody td:last-child{border-radius:0 10px 10px 0}
 td.v{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
 .yes,.no{display:inline-block;padding:3px 12px;border-radius:99px;font-weight:800;font-size:13px}
-.yes{background:#fff;color:#000}.no{background:var(--red);color:#fff}
+.yes{background:#22c55e;color:#04210f}.no{background:var(--red);color:#fff}
 tr.miss td,tr.red td{background:var(--red);color:#fff}
 tr.warn td{background:#bdbdbd;color:#000}
 .edit{width:70px;text-align:right;font:inherit;font-weight:700;color:#fff;background:#000;border:1px solid var(--edge);border-radius:8px;padding:3px 6px}
-.edit[readonly]{cursor:pointer;border-color:var(--soft)}
 .fab{position:fixed;right:max(20px,env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));width:58px;height:58px;border-radius:50%;border:1px solid #000;background:#fff;color:#000;font-size:26px;cursor:pointer;box-shadow:0 8px 28px rgba(255,255,255,.18)}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;padding:16px;z-index:5}
 .modal.on{display:flex}
@@ -109,10 +108,13 @@ const PCT=["voicefcr","voiceagentresolution","voiceansweredtakeratecalibrated","
 const norm=s=>String(s==null?"":s).toLowerCase().replace(/[^a-z0-9]/g,"");
 const AGENTS=GROUPS.flatMap(g=>g.names.map(n=>({name:n,id:norm(n),vrr:g.vrr,tag:g.short})));
 let cur=null,unlocked=false,pwThen=null;
-let data=[HDR.slice()],daysAll={},localTs=0;
+let data=[HDR.slice()],daysAll={},daysPub={},pubTs=0,localTs=0;
 try{const d=JSON.parse(localStorage.getItem("ps2_data")||"null");if(d&&d.length)data=d;const k=JSON.parse(localStorage.getItem("ps2_days")||"null");if(k)daysAll=k;localTs=+localStorage.getItem("ps2_ts")||0}catch(e){}
-const save=()=>{localTs=Date.now();try{localStorage.setItem("ps2_data",JSON.stringify(data));localStorage.setItem("ps2_days",JSON.stringify(daysAll));localStorage.setItem("ps2_ts",String(localTs))}catch(e){}};
-const D=()=>daysAll[cur.id]||(daysAll[cur.id]={w:22,s:22,a:0,l:0});
+const save=isData=>{if(isData)localTs=Date.now();try{localStorage.setItem("ps2_data",JSON.stringify(data));localStorage.setItem("ps2_days",JSON.stringify(daysAll));localStorage.setItem("ps2_ts",String(localTs))}catch(e){}};
+const DEF={w:22,s:22,a:0,l:0};
+const effDays=id=>{const l=daysAll[id],p=daysPub[id];const base=Object.assign({},DEF,p||{});return l&&(!p||l.t>=pubTs)?Object.assign({},DEF,l):base};
+const D=()=>effDays(cur.id);
+const setDay=(k,v)=>{const e=effDays(cur.id);e[k]=v;e.t=Date.now();daysAll[cur.id]=e};
 const colIdx=n=>(data[0]||[]).findIndex(h=>norm(h)===norm(n));
 const getRow=()=>{const i=colIdx("Agent Name");return i<0||!cur?null:data.slice(1).find(r=>norm(r[i])===norm(cur.name))};
 function num(n){const r=getRow(),i=colIdx(n);if(!r||i<0)return NaN;const s=String(r[i]==null?"":r[i]).trim();if(!s)return NaN;let v=parseFloat(s.replace(/[$,%\s]/g,""));if(isNaN(v))return NaN;if(PCT.includes(norm(n))&&(s.includes("%")||v>1))v/=100;return v}
@@ -160,7 +162,7 @@ const mult=days.s?days.w/days.s:NaN;
 const q2=q1;
 const sp=v=>ok(v)?Math.round(v*100)+"%":"—";
 const ab=n=>n===0?"100%":n===1?"75%":n===2?"50%":"0%";
-const ro=unlocked?"":" readonly";
+const ro="";
 const kpiAmt=p=>p>=.95?5250:p>=.9?5000:p>=.87?4500:p>=.85?2500:p>=.8?1975:0;
 const pr=Math.round(pcnt*1e6)/1e6;
 $id("kpi").innerHTML="<thead><tr><th>METRIC</th><th style='text-align:right'>ACTUAL</th><th style='text-align:right'>SCORE</th></tr></thead><tbody>"+
@@ -169,7 +171,7 @@ $id("kpi").innerHTML="<thead><tr><th>METRIC</th><th style='text-align:right'>ACT
 row3("AHT",N(aht),sp(s[0]),ahtC(aht))+row3("CSAT",N(csat,2),sp(s[1]),lv(csat,4.93))+row3("VRR",P(res),sp(s[2]),below(res,VRR))+row3("TRANSFER%",P(num("Voice Handled Transfer % (calibrated)")),sp(s[3]))+row3("P2P",P(pay),sp(s[4]),lv(pay,.83))+
 `<tr><td>ABSENCE</td><td class="v"><input class="edit" type="number" min="0" id="da" value="${days.a}"${ro}></td><td class="v">${ab(days.a)}</td></tr>`+`<tr><td>LATE</td><td class="v"><input class="edit" type="number" min="0" id="dl" value="${days.l}"${ro}></td><td class="v">${ab(days.l)}</td></tr>`+
 row3("MULTIPLIER","",sp(mult))+row3("PERCENTAGE","",sp(pcnt))+row3("INITIAL KPI","",$(ok(pr)?kpiAmt(pr):NaN))+row3("FINAL KPI","",$(ok(pr)&&ok(mult)?mult*kpiAmt(pr):NaN))+row3("QUALIFIED?","",badge(q2))+"</tbody>";
-const bind=(id,key,conv)=>{const el=$id(id);el.onclick=()=>{if(!unlocked)askPw(()=>{render();$id(id).focus()})};el.oninput=()=>{if(!unlocked)return;D()[key]=conv(el.value);save();render();$id(id).focus()}};
+const bind=(id,key,conv)=>{const el=$id(id);el.oninput=()=>{setDay(key,conv(el.value));save();render();$id(id).focus()}};
 bind("dw","w",v=>parseFloat(v)||0);bind("ds","s",v=>parseFloat(v)||0);
 bind("da","a",v=>Math.max(0,parseInt(v)||0));bind("dl","l",v=>Math.max(0,parseInt(v)||0));
 }
@@ -220,7 +222,7 @@ for(let r=0;r<R;r++){h+=`<tr><td class="n">${r+1}</td>`;for(let c=0;c<C;c++){con
 $id("sheet").innerHTML=h+"</tbody></table>";
 }
 const sheet=$id("sheet"),modal=$id("modal");
-sheet.addEventListener("input",e=>{if(!unlocked)return;const t=e.target;if(!t.dataset||t.dataset.r===undefined)return;const r=+t.dataset.r,c=+t.dataset.c;while(data.length<=r)data.push([]);data[r][c]=t.textContent;save();render()});
+sheet.addEventListener("input",e=>{if(!unlocked)return;const t=e.target;if(!t.dataset||t.dataset.r===undefined)return;const r=+t.dataset.r,c=+t.dataset.c;while(data.length<=r)data.push([]);data[r][c]=t.textContent;save(true);render()});
 sheet.addEventListener("paste",e=>{
 const t=e.target.closest("td[data-r]");if(!t)return;e.preventDefault();
 if(!unlocked){askPw();return}
@@ -228,16 +230,17 @@ const txt=(e.clipboardData||window.clipboardData).getData("text");
 const rows=txt.replace(/\r/g,"").replace(/\n+$/,"").split("\n").map(l=>l.split("\t"));
 const r0=+t.dataset.r,c0=+t.dataset.c;
 rows.forEach((cells,i)=>{while(data.length<=r0+i)data.push([]);cells.forEach((v,j)=>{data[r0+i][c0+j]=v.trim()})});
-save();grid();render()});
+save(true);grid();render()});
 const closeSheet=()=>{modal.classList.remove("on");render()};
 $id("fab").onclick=()=>{askPw(()=>{grid();modal.classList.add("on");render()})};
 $id("close").onclick=closeSheet;
-$id("clear").onclick=()=>{if(!unlocked)return askPw();if(!confirm("Clear ALL pasted data for every agent?"))return;data=[[]];save();grid();render()};
+$id("clear").onclick=()=>{if(!unlocked)return askPw();if(!confirm("Clear ALL pasted data for every agent?"))return;data=[[]];save(true);grid();render()};
 modal.addEventListener("click",e=>{if(e.target===modal)closeSheet()});
 
+function exportDays(){const ids=new Set([...Object.keys(daysPub),...Object.keys(daysAll)]),o={};ids.forEach(id=>{const e=effDays(id);delete e.t;o[id]=e});return o}
 $id("export").onclick=()=>{
 if(!unlocked)return askPw();
-const blob=new Blob([JSON.stringify({updated:Date.now(),data:data,days:daysAll})],{type:"application/json"});
+const blob=new Blob([JSON.stringify({updated:Date.now(),data:data,days:exportDays()})],{type:"application/json"});
 const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="data.json";document.body.appendChild(a);a.click();a.remove();
 setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 alert("data.json downloaded.\n\nUpload it to your GitHub repo (same folder as index.html) and replace the old data.json. Agents will see the update after a few minutes.");
@@ -248,8 +251,8 @@ function loadPublished(){
 if(location.protocol==="file:")return;
 fetch("data.json?v="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{
 if(!j||!Array.isArray(j.data)||!j.data.length)return;
-if((+j.updated||0)<localTs)return;          // your own newer edits in this browser win
-data=j.data;daysAll=j.days||{};
+daysPub=j.days||{};pubTs=+j.updated||0;
+if(pubTs>=localTs)data=j.data;   // your own newer pasted data in this browser wins
 if(cur&&!$id("modal").classList.contains("on"))render();
 }).catch(()=>{});
 }
