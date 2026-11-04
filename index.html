@@ -82,7 +82,7 @@ tr.orange td{background:#f97316;color:#000}
 </div>
 <button class="fab" id="fab" title="Open data sheet" aria-label="Open data sheet">&#128214;</button>
 
-<button class="fab fab2" id="fab2" title="Export data (publish to agents)" aria-label="Export data">&#11015;</button>
+
 
 <!-- Leaderboards -->
 <div class="modal" id="lb"><div class="lbwrap">
@@ -287,9 +287,9 @@ setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 alert("data.json downloaded.\n\nUpload it to your GitHub repo (same folder as index.html) and replace the old data.json. Agents will see the update after a few minutes.");
 }
 $id("export").onclick=()=>unlocked?doExport():askPw(doExport);
-$id("fab2").onclick=()=>unlocked?doExport():askPw(doExport);
 
 /* ---------- Published data (data.json next to index.html) ---------- */
+
 function loadPublished(){
 if(location.protocol==="file:")return;
 fetch("data.json?v="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{
