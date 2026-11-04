@@ -164,7 +164,6 @@ function render(){
 if(!cur)return;
 const days=D();
 $id("agent").textContent=cur.name.toUpperCase();
-$id("tag").textContent=cur.tag+" · VRR: RED BELOW "+Math.round(cur.red*100)+"% · ORANGE BELOW "+Math.round(cur.org*100)+"%";
 $id("note").textContent=getRow()?"":"No data found for this agent yet. Ask your supervisor to load the latest data.";
 const ans=num("Voice Answered"),aht=num("Voice Answered AHT"),csat=num("Voice CSAT"),fcr=num("Voice FCR"),res=num("Voice Agent Resolution"),take=num("Voice Answered Take Rate (calibrated)"),trf=num("Voice Answered Transfer to Survey % (calibrated)"),pay=num("Status - Pay to Performance"),book=num("Revenue - Bookings (Post Recoup)"),acq=num("Revenue - ACQ + CROSS (Post Recoup)"),ren=num("Revenue - REN (Post Recoup)");
 $id("mtd").innerHTML="<thead><tr><th>METRIC</th><th style='text-align:right'>SCORE</th></tr></thead><tbody>"+
