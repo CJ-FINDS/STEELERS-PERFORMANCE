@@ -5,11 +5,11 @@
 <style>
 :root{--bg:#000;--card:#0b0b0b;--row:#1a1a1a;--text:#fff;--muted:#a3a3a3;--edge:rgba(255,255,255,.85);--soft:rgba(255,255,255,.22);--red:#dc2626;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box}
-body{margin:0;min-height:100vh;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--text);background:var(--bg)}
+html{height:100%}
+body{margin:0;min-height:100%;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--text);background:var(--bg)}
 header{padding:28px 20px 8px;text-align:center;position:relative}
 h1{margin:0;font-size:13px;letter-spacing:.3em;color:var(--muted)}
 h2.agent{margin:6px 0 0;font-size:clamp(22px,4vw,34px);letter-spacing:.04em}
-.tag{margin-top:6px;font-size:11px;letter-spacing:.18em;color:var(--muted)}
 .switch{position:absolute;top:22px;right:20px;border:1px solid var(--edge);background:transparent;color:var(--text);border-radius:10px;padding:8px 14px;font-weight:700;font-size:12px;letter-spacing:.08em;cursor:pointer}
 .switch:hover{background:#fff;color:#000}
 .note{max-width:1200px;margin:10px auto 0;padding:0 20px;text-align:center;font-size:13px;color:var(--muted)}
@@ -26,11 +26,11 @@ td.v{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
 tr.miss td,tr.red td{background:var(--red);color:#fff}
 tr.orange td{background:#f97316;color:#000}
 .edit{width:70px;text-align:right;font:inherit;font-weight:700;color:#fff;background:#000;border:1px solid var(--edge);border-radius:8px;padding:3px 6px}
+.edit[readonly]{border-color:var(--soft);cursor:pointer}
 .fab{position:fixed;right:max(20px,env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));width:58px;height:58px;border-radius:50%;border:1px solid #000;background:#fff;color:#000;font-size:26px;cursor:pointer;box-shadow:0 8px 28px rgba(255,255,255,.18)}
-.fab2{right:calc(max(20px,env(safe-area-inset-right,0px)) + 70px);font-size:22px;font-weight:700}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;padding:16px;z-index:5}
 .modal.on{display:flex}
-#pwModal{z-index:10}
+#pwModal{z-index:30}
 #picker{z-index:20;background:#000;overflow:auto;align-items:flex-start}
 .panel{background:var(--card);border:1px solid var(--edge);border-radius:20px;width:min(1100px,100%);max-height:88vh;display:flex;flex-direction:column;padding:16px;color:#fff}
 .bar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap}
@@ -44,25 +44,24 @@ tr.orange td{background:#f97316;color:#000}
 .sheet td.n{background:#eee;color:#111;min-width:34px;text-align:center;position:sticky;left:0}
 .sheet tr:first-of-type td:not(.n){font-weight:700;background:#f5f5f5}
 .sheet td:focus{outline:2px solid #000;outline-offset:-2px}
-/* Name picker */
 .pick{width:min(760px,100%);margin:6vh auto 40px;text-align:center}
-.pick h1{font-size:13px}
 .pick h2{margin:10px 0 6px;font-size:clamp(24px,5vw,36px);letter-spacing:.04em}
-.pick p{margin:0 0 18px;color:var(--muted);font-size:14px}
-.search{width:100%;max-width:420px;font:inherit;font-size:15px;color:#fff;background:#000;border:1px solid var(--edge);border-radius:12px;padding:12px 14px;margin-bottom:22px;text-align:center}
 .grp{margin-bottom:22px;text-align:left}
 .grp h4{margin:0 0 10px;font-size:12px;letter-spacing:.2em;color:var(--muted);border-bottom:1px solid var(--soft);padding-bottom:8px}
 .names{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
 .names button{font:inherit;font-weight:700;font-size:14px;text-align:left;color:#fff;background:var(--card);border:1px solid var(--edge);border-radius:12px;padding:13px 14px;cursor:pointer}
 .names button:hover{background:#fff;color:#000}
-#lb{z-index:20;background:#000;overflow:auto;align-items:flex-start}
+#lb,#ts{z-index:20;background:#000;overflow:auto;align-items:flex-start}
 .lbwrap{width:min(1200px,100%);margin:3vh auto 40px}
 .lbtop{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px}
 .lbtop h2{margin:0;font-size:clamp(22px,4vw,32px);letter-spacing:.06em}
 .lbsec{grid-column:1/-1;font-size:12px;letter-spacing:.2em;color:var(--muted);border-bottom:1px solid var(--soft);padding-bottom:8px;margin-top:8px}
 .lbgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;padding:14px 0}
 .lbgrid td:first-child{width:36px;text-align:center}
-.lbbtn{font:inherit;font-weight:800;font-size:15px;letter-spacing:.16em;color:#000;background:#fff;border:1px solid #fff;border-radius:12px;padding:14px 28px;cursor:pointer;margin-bottom:26px}
+#tsGrid td:first-child{white-space:nowrap}
+.tg{display:block;font-size:10px;letter-spacing:.12em;opacity:.7;font-weight:600}
+.lbbtns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:26px}
+.lbbtn{font:inherit;font-weight:800;font-size:15px;letter-spacing:.16em;color:#000;background:#fff;border:1px solid #fff;border-radius:12px;padding:14px 28px;cursor:pointer}
 .lbbtn:hover{background:#000;color:#fff;border-color:var(--edge)}
 .empty{color:var(--muted);font-size:14px;padding:10px 0}
 #pwIn{width:100%;font:inherit;font-size:16px;color:#fff;background:#000;border:1px solid var(--edge);border-radius:10px;padding:11px 12px;margin:12px 0 6px}
@@ -72,7 +71,7 @@ tr.orange td{background:#f97316;color:#000}
 </style></head><body>
 <header>
 <button class="switch" id="switch">SWITCH AGENT</button>
-<h1>PROGRESS STAT</h1><h2 class="agent" id="agent"></h2><div class="tag" id="tag"></div>
+<h1>PROGRESS STAT</h1><h2 class="agent" id="agent"></h2>
 </header>
 <div class="note" id="note"></div>
 <div class="grid">
@@ -82,24 +81,24 @@ tr.orange td{background:#f97316;color:#000}
 </div>
 <button class="fab" id="fab" title="Open data sheet" aria-label="Open data sheet">&#128214;</button>
 
-
-
-<!-- Leaderboards -->
 <div class="modal" id="lb"><div class="lbwrap">
 <div class="lbtop"><h2>LEADERBOARDS</h2><button class="switch" id="lbBack" style="position:static">BACK</button></div>
-<div class="note" style="text-align:left;padding:0;margin:0 0 4px"></div>
 <div class="lbgrid" id="lbGrid"></div>
 </div></div>
 
-<!-- Name picker -->
+<div class="modal" id="ts"><div class="lbwrap">
+<div class="lbtop"><h2>TEAM SCORES</h2><button class="switch" id="tsBack" style="position:static">BACK</button></div>
+<div class="note" id="tsNote" style="text-align:left;padding:0;margin:0 0 4px"></div>
+<div class="lbgrid" id="tsGrid"></div>
+</div></div>
+
 <div class="modal on" id="picker"><div class="pick">
 <h1>PROGRESS STAT</h1>
 <h2>STEELERS MTD</h2>
-<button class="lbbtn" id="lbBtn">VIEW LEADERBOARDS</button>
+<div class="lbbtns"><button class="lbbtn" id="lbBtn">VIEW LEADERBOARDS</button><button class="lbbtn" id="tsBtn">VIEW TEAM SCORES</button></div>
 <div id="groups"></div>
 </div></div>
 
-<!-- Password prompt -->
 <div class="modal" id="pwModal"><div class="panel" style="width:min(380px,100%)">
 <b>Password required</b>
 <small style="opacity:.75;margin-top:4px">Enter the password to edit or paste data.</small>
@@ -108,15 +107,30 @@ tr.orange td{background:#f97316;color:#000}
 <div class="pwbtns"><button class="ghost" id="pwCancel">Cancel</button><button id="pwOk">Unlock</button></div>
 </div></div>
 
-<!-- Data sheet -->
 <div class="modal" id="modal"><div class="panel">
 <div class="bar"><div><b>Data sheet</b> <small>Click a cell and paste (Ctrl+V) your Excel data, headers in row 1</small></div>
 <div><button id="export" title="Download data.json to publish for all agents">Export data</button><button id="clear">Clear</button><button id="close">Done</button></div></div>
 <div class="sheet" id="sheet"></div></div></div>
 
 <script>
-const PASSWORD="Christian051026";
-const TAKE_TARGET=.25, ACQ_TARGET=5.85;
+/* ================= CONFIG: edit values here ================= */
+// Password is stored as a hash, not plain text. To change it, run in the browser console:
+// hash("YourNewPassword") and paste the number below. (Still client-side only: it gates the UI, not the data.)
+const PW_HASH=1692183746526809;
+const hash=(s,seed=0)=>{let h1=0xdeadbeef^seed,h2=0x41c6ce57^seed;for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}
+h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return 4294967296*(2097151&h2)+(h1>>>0)};
+const CFG={
+ takeTarget:.25, passRateTarget:.6, acqTarget:5.85, csatTarget:4.9, p2pTarget:.87, fcrTarget:.85, ahtTarget:920, xferSurveyRed:.55, transferMax:.12,
+ defaultDays:{w:22,s:22,a:0,l:0},
+ // Incentive: bookings threshold -> payout
+ incentive:[[500,1750],[1000,3250],[2000,4750],[3000,5000],[3500,5100],[4000,5250],[4500,5750],[5000,6250],[5500,6500],[6000,7000],[6500,7500],[7000,8000]],
+ kicker:{start:7000,rate:.035,fx:60.59},
+ // KPI payout bands: minimum percentage -> amount (highest first)
+ kpiBands:[[.95,5250],[.9,5000],[.87,4500],[.85,2500],[.8,1975]],
+ // KPI weights
+ weights:{csat:.2,aht:.25,vrr:.25,p2p:.15,transfer:.05,absence:.05,late:.05}
+};
+/* ============================================================ */
 const GROUPS=[
 {label:"TENURED AGENTS",short:"TENURED",key:"t",red:.94,org:.97,names:["Chino Albarracin","Blessy Anne Opamin","Kint Mabayo","Dean John Mawili","Gestoni Cobar"]},
 {label:"31-90 DAYS",short:"31-90 DAYS",key:"m",red:.91,org:.93,names:["Rommel Gepitulan","Joann Paler","Carla Lynn Lanada","Archellie Recinto","Dinece Ambra Estella","Julie Luz Baloy","Justine Bustillon","Bill Christian Llevares"]},
@@ -125,16 +139,17 @@ const HDR=["Agent Name","Voice Answered","Voice Answered AHT","Voice CSAT","Voic
 const PCT=["voicefcr","voiceagentresolution","voiceansweredtakeratecalibrated","voiceansweredtransfertosurveycalibrated","voicehandledtransfercalibrated","statuspaytoperformance"];
 const norm=s=>String(s==null?"":s).toLowerCase().replace(/[^a-z0-9]/g,"");
 const AGENTS=GROUPS.flatMap(g=>g.names.map(n=>({name:n,id:norm(n),key:g.key,red:g.red,org:g.org,tag:g.short})));
+const $id=id=>document.getElementById(id);
 let cur=null,unlocked=false,pwThen=null;
 let data=[HDR.slice()],daysAll={},daysPub={},pubTs=0,localTs=0;
 try{const d=JSON.parse(localStorage.getItem("ps2_data")||"null");if(d&&d.length)data=d;const k=JSON.parse(localStorage.getItem("ps2_days")||"null");if(k)daysAll=k;localTs=+localStorage.getItem("ps2_ts")||0}catch(e){}
 const save=isData=>{if(isData)localTs=Date.now();try{localStorage.setItem("ps2_data",JSON.stringify(data));localStorage.setItem("ps2_days",JSON.stringify(daysAll));localStorage.setItem("ps2_ts",String(localTs))}catch(e){}};
-const DEF={w:22,s:22,a:0,l:0};
-const effDays=id=>{const l=daysAll[id],p=daysPub[id];const base=Object.assign({},DEF,p||{});return l&&(!p||l.t>=pubTs)?Object.assign({},DEF,l):base};
+const effDays=id=>{const l=daysAll[id],p=daysPub[id];const base=Object.assign({},CFG.defaultDays,p||{});return l&&(!p||l.t>=pubTs)?Object.assign({},CFG.defaultDays,l):base};
 const D=()=>effDays(cur.id);
 const setDay=(k,v)=>{const e=effDays(cur.id);e[k]=v;e.t=Date.now();daysAll[cur.id]=e};
 const colIdx=n=>(data[0]||[]).findIndex(h=>norm(h)===norm(n));
 const getRow=(a=cur)=>{const i=colIdx("Agent Name");return i<0||!a?null:data.slice(1).find(r=>norm(r[i])===norm(a.name))};
+// Percent fields: "93%" or 93 -> 0.93; a bare value of 1 or less is treated as already a fraction (1 = 100%).
 function num(n,a=cur){const r=getRow(a),i=colIdx(n);if(!r||i<0)return NaN;const s=String(r[i]==null?"":r[i]).trim();if(!s)return NaN;let v=parseFloat(s.replace(/[$,%\s]/g,""));if(isNaN(v))return NaN;if(PCT.includes(norm(n))&&(s.includes("%")||v>1))v/=100;return v}
 const ok=v=>!isNaN(v);
 const P=v=>ok(v)?(v*100).toFixed(1)+"%":"—";
@@ -144,99 +159,119 @@ const tier=(v,list,dir,last)=>{if(!ok(v))return NaN;for(const[t,s]of list){if(di
 const sc={
 aht:v=>tier(v,[[920,1],[930,.9],[939,.8],[949,.7],[959,.6]],-1,.5),
 csat:v=>tier(v,[[4.96,1.1],[4.93,1],[4.89,.9],[4.85,.8]],1,.5),
-res:v=>tier(v,[[.97,1.1],[.94,1],[.92,.9],[.9,.8],[.871,.7]],1,.5),
 trf:v=>tier(v,[[.12,1.1],[.129,1],[.139,.9],[.145,.8],[.149,.7]],-1,.5),
 pay:v=>tier(v,[[.87,1.1],[.83,1],[.8,.9],[.77,.8],[.75,.7],[.73,.6]],1,.5)};
+// VRR tiers by tenure group; every boundary is inclusive (>=)
 const vrrScore=(v,k)=>{if(!ok(v))return NaN;
 if(k==="t")return v>=.97?1.1:v>=.94?1:v>=.92?.9:v>=.9?.8:v>=.871?.7:.5;
-if(k==="m")return v>=.93?1.1:v>=.9?1:v>=.88?.9:v>=.85?.8:v>.82?.7:.5;
-return v>.91?1.1:v>=.87?1:v>=.85?.9:v>=.82?.8:v>=.801?.7:.5};
+if(k==="m")return v>=.93?1.1:v>=.9?1:v>=.88?.9:v>=.85?.8:v>=.82?.7:.5;
+return v>=.91?1.1:v>=.87?1:v>=.85?.9:v>=.82?.8:v>=.801?.7:.5};
 const vrrC=(v,a)=>!ok(v)?"":v<a.red?"miss":v<a.org?"orange":"";
-const pcC=v=>!ok(v)?"":v<ACQ_TARGET?"miss":v<ACQ_TARGET+.5?"orange":"";
-const below=(v,t)=>ok(v)&&v<t?"miss":"";   // red whenever the target is not met
-const ahtC=v=>ok(v)&&v>920?"miss":"";
-const xfC=v=>ok(v)&&v<.55?"red":"";
+const pcC=v=>!ok(v)?"":v<CFG.acqTarget?"miss":v<CFG.acqTarget+.5?"orange":"";
+const below=(v,t)=>ok(v)&&v<t?"miss":"";
+const above=(v,t)=>ok(v)&&v>t?"miss":"";
+const xfC=v=>ok(v)&&v<CFG.xferSurveyRed?"red":"";
 const row3=(a,b,c,m)=>`<tr${m?' class="'+m+'"':''}><td>${a}</td><td class="v">${b}</td>${c===undefined?"":`<td class="v">${c}</td>`}</tr>`;
 const badge=q=>q===null?"—":`<span class="${q?"yes":"no"}">${q?"YES":"NO"}</span>`;
-const $id=id=>document.getElementById(id);
+const kpiAmt=p=>{for(const[t,a]of CFG.kpiBands)if(p>=t)return a;return 0};
 
 function render(){
 if(!cur)return;
 const days=D();
 $id("agent").textContent=cur.name.toUpperCase();
 $id("note").textContent=getRow()?"":"No data found for this agent yet. Ask your supervisor to load the latest data.";
-const ans=num("Voice Answered"),aht=num("Voice Answered AHT"),csat=num("Voice CSAT"),fcr=num("Voice FCR"),res=num("Voice Agent Resolution"),take=num("Voice Answered Take Rate (calibrated)"),trf=num("Voice Answered Transfer to Survey % (calibrated)"),pay=num("Status - Pay to Performance"),book=num("Revenue - Bookings (Post Recoup)"),acq=num("Revenue - ACQ + CROSS (Post Recoup)"),ren=num("Revenue - REN (Post Recoup)");
+const ans=num("Voice Answered"),aht=num("Voice Answered AHT"),csat=num("Voice CSAT"),fcr=num("Voice FCR"),res=num("Voice Agent Resolution"),take=num("Voice Answered Take Rate (calibrated)"),trf=num("Voice Answered Transfer to Survey % (calibrated)"),xfer=num("Voice Handled Transfer % (calibrated)"),pay=num("Status - Pay to Performance"),book=num("Revenue - Bookings (Post Recoup)"),acq=num("Revenue - ACQ + CROSS (Post Recoup)"),ren=num("Revenue - REN (Post Recoup)");
 $id("mtd").innerHTML="<thead><tr><th>METRIC</th><th style='text-align:right'>SCORE</th></tr></thead><tbody>"+
-row3("CALLS",N(ans))+row3("AHT",N(aht),undefined,ahtC(aht))+row3("CSAT",N(csat,2),undefined,below(csat,4.9))+row3("VRR",P(res),undefined,vrrC(res,cur))+row3("FCR",P(fcr))+row3("TAKE RATE",P(take),undefined,below(take,TAKE_TARGET))+row3("XFER TO SURVEY",P(trf),undefined,xfC(trf))+row3("TRANSFERS%",P(num("Voice Handled Transfer % (calibrated)")))+row3("P2P",P(pay),undefined,below(pay,.87))+"</tbody>";
+row3("CALLS",N(ans))+row3("AHT",N(aht),undefined,above(aht,CFG.ahtTarget))+row3("CSAT",N(csat,2),undefined,below(csat,CFG.csatTarget))+row3("VRR",P(res),undefined,vrrC(res,cur))+row3("FCR",P(fcr))+row3("TAKE RATE",P(take),undefined,below(take,CFG.takeTarget))+row3("XFER TO SURVEY",P(trf),undefined,xfC(trf))+row3("TRANSFERS%",P(xfer),undefined,above(xfer,CFG.transferMax))+row3("P2P",P(pay),undefined,below(pay,CFG.p2pTarget))+"</tbody>";
 const tot=ok(acq)&&ok(ren)?acq+ren:NaN,pc=ok(acq)&&ok(ans)&&ans?acq/ans:NaN;
-const miss=ok(pc)?(pc<ACQ_TARGET?ACQ_TARGET*ans-acq:0):NaN;
-let inc=NaN;if(ok(book)){inc=0;const K=[500,1000,2000,3000,3500,4000,4500,5000,5500,6000,6500,7000],V=[1750,3250,4750,5000,5100,5250,5750,6250,6500,7000,7500,8000];K.forEach((k,i)=>{if(book>=k)inc=V[i]})}
-const kick=ok(book)?Math.round(Math.max(book-7000,0)*0.035*60.59*100)/100:NaN;
-const q1=ok(take)&&ok(csat)&&ok(pc)?(take>=TAKE_TARGET&&csat>=4.9&&pc>=ACQ_TARGET):null;
+const miss=ok(pc)?(pc<CFG.acqTarget?CFG.acqTarget*ans-acq:0):NaN;
+let inc=NaN;if(ok(book)){inc=0;CFG.incentive.forEach(([k,v])=>{if(book>=k)inc=v})}
+const kick=ok(book)?Math.round(Math.max(book-CFG.kicker.start,0)*CFG.kicker.rate*CFG.kicker.fx*100)/100:NaN;
+const q1=ok(take)&&ok(csat)&&ok(pc)?(take>=CFG.takeTarget&&csat>=CFG.csatTarget&&pc>=CFG.acqTarget):null;
 $id("sales").innerHTML="<thead><tr><th>METRIC</th><th style='text-align:right'>VALUE</th></tr></thead><tbody>"+
 row3("ACQ",$(acq))+row3("RENEWAL",$(ren))+row3("TOTAL",$(tot))+
-row3("$/CALL",$(pc),undefined,pcC(pc))+row3("Missing ACQ (target $"+ACQ_TARGET.toFixed(2)+"/call)",$(miss),undefined,below(pc,ACQ_TARGET))+row3("INCENTIVES",$(inc))+row3("KICKER",$(kick))+row3("QUALIFIED?",badge(q1))+"</tbody>";
-const s=[sc.aht(aht),sc.csat(csat),vrrScore(res,cur.key),sc.trf(num("Voice Handled Transfer % (calibrated)")),sc.pay(pay)];
+row3("$/CALL",$(pc),undefined,pcC(pc))+row3("Missing ACQ (target $"+CFG.acqTarget.toFixed(2)+"/call)",$(miss),undefined,below(pc,CFG.acqTarget))+row3("INCENTIVES",$(inc))+row3("KICKER",$(kick))+row3("QUALIFIED?",badge(q1))+"</tbody>";
+const W=CFG.weights;
+const s=[sc.aht(aht),sc.csat(csat),vrrScore(res,cur.key),sc.trf(xfer),sc.pay(pay)];
 const abn=n=>n===0?1:n===1?.75:n===2?.5:0;
-const s7=s.concat([abn(days.a),abn(days.l)]);
-const pcnt=s7.every(ok)?s[1]*.2+s[0]*.25+s[2]*.25+s[4]*.15+s[3]*.05+s7[5]*.05+s7[6]*.05:NaN;
-const mult=days.s?days.w/days.s:NaN;
-const q2=q1;
+const pcnt=s.every(ok)?s[1]*W.csat+s[0]*W.aht+s[2]*W.vrr+s[4]*W.p2p+s[3]*W.transfer+abn(days.a)*W.absence+abn(days.l)*W.late:NaN;
+const mult=days.s?Math.min(1,days.w/days.s):NaN;   // capped at 100%
 const sp=v=>ok(v)?Math.round(v*100)+"%":"—";
-const ab=n=>n===0?"100%":n===1?"75%":n===2?"50%":"0%";
-const ro="";
-const kpiAmt=p=>p>=.95?5250:p>=.9?5000:p>=.87?4500:p>=.85?2500:p>=.8?1975:0;
+const ab=n=>sp(abn(n));
 const pr=Math.round(pcnt*1e6)/1e6;
+const initial=ok(pr)?kpiAmt(pr):NaN;
+const q2=ok(pr)?initial>0:null;   // KPI qualified = reaches the lowest payout band
+const ro=unlocked?"":" readonly";
+const inp=(id,v)=>`<input class="edit" type="text" inputmode="decimal" id="${id}" value="${v}"${ro}>`;
 $id("kpi").innerHTML="<thead><tr><th>METRIC</th><th style='text-align:right'>ACTUAL</th><th style='text-align:right'>SCORE</th></tr></thead><tbody>"+
-`<tr><td>Days Worked</td><td class="v" colspan="2"><input class="edit" type="number" min="0" id="dw" value="${days.w}"${ro}></td></tr>`+
-`<tr><td>Days Scheduled</td><td class="v" colspan="2"><input class="edit" type="number" min="0" id="ds" value="${days.s}"${ro}></td></tr>`+
-row3("AHT",N(aht),sp(s[0]),ahtC(aht))+row3("CSAT",N(csat,2),sp(s[1]),below(csat,4.9))+row3("VRR",P(res),sp(s[2]),vrrC(res,cur))+row3("TRANSFER%",P(num("Voice Handled Transfer % (calibrated)")),sp(s[3]))+row3("P2P",P(pay),sp(s[4]),below(pay,.87))+
-`<tr><td>ABSENCE</td><td class="v"><input class="edit" type="number" min="0" id="da" value="${days.a}"${ro}></td><td class="v">${ab(days.a)}</td></tr>`+`<tr><td>LATE</td><td class="v"><input class="edit" type="number" min="0" id="dl" value="${days.l}"${ro}></td><td class="v">${ab(days.l)}</td></tr>`+
-row3("MULTIPLIER","",sp(mult))+row3("PERCENTAGE","",sp(pcnt))+row3("INITIAL KPI","",$(ok(pr)?kpiAmt(pr):NaN))+row3("FINAL KPI","",$(ok(pr)&&ok(mult)?mult*kpiAmt(pr):NaN))+row3("QUALIFIED?","",badge(q2))+"</tbody>";
-const bind=(id,key,conv)=>{const el=$id(id);el.oninput=()=>{setDay(key,conv(el.value));save();render();$id(id).focus()}};
-bind("dw","w",v=>parseFloat(v)||0);bind("ds","s",v=>parseFloat(v)||0);
+`<tr><td>Days Worked</td><td class="v" colspan="2">${inp("dw",days.w)}</td></tr>`+
+`<tr><td>Days Scheduled</td><td class="v" colspan="2">${inp("ds",days.s)}</td></tr>`+
+row3("AHT",N(aht),sp(s[0]),above(aht,CFG.ahtTarget))+row3("CSAT",N(csat,2),sp(s[1]),below(csat,CFG.csatTarget))+row3("VRR",P(res),sp(s[2]),vrrC(res,cur))+row3("TRANSFER%",P(xfer),sp(s[3]),above(xfer,CFG.transferMax))+row3("P2P",P(pay),sp(s[4]),below(pay,CFG.p2pTarget))+
+`<tr><td>ABSENCE</td><td class="v">${inp("da",days.a)}</td><td class="v">${ab(days.a)}</td></tr>`+`<tr><td>LATE</td><td class="v">${inp("dl",days.l)}</td><td class="v">${ab(days.l)}</td></tr>`+
+row3("MULTIPLIER","",sp(mult))+row3("PERCENTAGE","",sp(pcnt))+row3("INITIAL KPI","",$(initial))+row3("FINAL KPI","",$(ok(initial)&&ok(mult)?mult*initial:NaN))+row3("QUALIFIED?","",badge(q2))+"</tbody>";
+const bind=(id,key,conv)=>{const el=$id(id);
+ el.onclick=()=>{if(!unlocked)askPw(render)};
+ el.oninput=()=>{if(!unlocked)return;const pos=el.selectionStart;setDay(key,conv(el.value));save();render();const n=$id(id);n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}}};
+bind("dw","w",v=>Math.max(0,parseFloat(v)||0));bind("ds","s",v=>Math.max(0,parseFloat(v)||0));
 bind("da","a",v=>Math.max(0,parseInt(v)||0));bind("dl","l",v=>Math.max(0,parseInt(v)||0));
 }
 
 /* ---------- Name picker & routing ---------- */
-function buildPicker(filter){
-const f=norm(filter||"");let h="",any=false;
-GROUPS.forEach(g=>{
-const list=g.names.filter(n=>!f||norm(n).includes(f));
-if(!list.length)return;any=true;
-h+=`<div class="grp"><h4>${g.label}</h4><div class="names">`+list.map(n=>`<button data-id="${norm(n)}">${n}</button>`).join("")+`</div></div>`;
-});
-$id("groups").innerHTML=any?h:'<div class="empty">No matching name.</div>';
+function buildPicker(){
+$id("groups").innerHTML=GROUPS.map(g=>`<div class="grp"><h4>${g.label}</h4><div class="names">`+g.names.map(n=>`<button data-id="${norm(n)}">${n}</button>`).join("")+`</div></div>`).join("");
 }
 $id("groups").addEventListener("click",e=>{const b=e.target.closest("button[data-id]");if(b)location.hash=b.dataset.id});
 $id("lbBtn").onclick=()=>{location.hash="leaderboards"};
 $id("lbBack").onclick=()=>{location.hash=""};
+$id("tsBtn").onclick=()=>{location.hash="teamscores"};
+$id("tsBack").onclick=()=>{location.hash=""};
 function route(){
 const id=decodeURIComponent(location.hash.replace(/^#/,""));
 cur=AGENTS.find(a=>a.id===id)||null;
 unlocked=false;
-const isLB=id==="leaderboards";
+const isLB=id==="leaderboards",isTS=id==="teamscores";
 $id("lb").classList.toggle("on",isLB);
-if(cur){$id("picker").classList.remove("on");$id("modal").classList.remove("on");render()}
-else if(isLB){$id("picker").classList.remove("on");$id("modal").classList.remove("on");renderLB()}
-else{buildPicker("");$id("picker").classList.add("on")}
+$id("ts").classList.toggle("on",isTS);
+$id("modal").classList.remove("on");
+if(cur){$id("picker").classList.remove("on");render()}
+else if(isLB){$id("picker").classList.remove("on");renderLB()}
+else if(isTS){$id("picker").classList.remove("on");renderTS()}
+else{buildPicker();$id("picker").classList.add("on")}
 }
 window.addEventListener("hashchange",route);
 $id("switch").onclick=()=>{location.hash=""};
 
 /* ---------- Leaderboards ---------- */
 function renderLB(){
-const rows=AGENTS.map(a=>{const g=k=>num(k,a);const ans=g("Voice Answered"),acq=g("Revenue - ACQ + CROSS (Post Recoup)"),ren=g("Revenue - REN (Post Recoup)");
-return{a,ans,aht:g("Voice Answered AHT"),csat:g("Voice CSAT"),res:g("Voice Agent Resolution"),fcr:g("Voice FCR"),take:g("Voice Answered Take Rate (calibrated)"),trf:g("Voice Answered Transfer to Survey % (calibrated)"),xf:g("Voice Handled Transfer % (calibrated)"),pay:g("Status - Pay to Performance"),tot:ok(acq)&&ok(ren)?acq+ren:NaN,pc:ok(acq)&&ok(ans)&&ans?acq/ans:NaN}});
-const none=()=>"";
-// [title, field, formatter, colour rule, order: 1 = highest first, -1 = lowest first (lower is better)]
-const MTD=[["AHT","aht",v=>N(v),v=>ahtC(v),-1],["CSAT","csat",v=>N(v,2),v=>below(v,4.9),1],["VRR","res",P,(v,r)=>vrrC(v,r.a),1],["FCR","fcr",P,v=>below(v,.85),1],["TAKE RATE","take",P,v=>below(v,TAKE_TARGET),1],["XFER TO SURVEY","trf",P,v=>xfC(v),1],["TRANSFERS%","xf",P,v=>ok(v)&&v>.12?"miss":"",-1],["P2P","pay",P,v=>below(v,.87),1]];
+const rows=AGENTS.map(a=>{const g=k=>num(k,a);const ans=g("Voice Answered"),acq=g("Revenue - ACQ + CROSS (Post Recoup)");
+return{a,aht:g("Voice Answered AHT"),csat:g("Voice CSAT"),res:g("Voice Agent Resolution"),fcr:g("Voice FCR"),take:g("Voice Answered Take Rate (calibrated)"),trf:g("Voice Answered Transfer to Survey % (calibrated)"),xf:g("Voice Handled Transfer % (calibrated)"),pay:g("Status - Pay to Performance"),pc:ok(acq)&&ok(ans)&&ans?acq/ans:NaN}});
+// [title, field, formatter, colour rule, order: 1 = highest first, -1 = lowest first]
+const MTD=[["AHT","aht",v=>N(v),v=>above(v,CFG.ahtTarget),-1],["CSAT","csat",v=>N(v,2),v=>below(v,CFG.csatTarget),1],["VRR","res",P,(v,r)=>vrrC(v,r.a),1],["FCR","fcr",P,v=>below(v,CFG.fcrTarget),1],["TAKE RATE","take",P,v=>below(v,CFG.takeTarget),1],["XFER TO SURVEY","trf",P,v=>xfC(v),1],["TRANSFERS%","xf",P,v=>above(v,CFG.transferMax),-1],["P2P","pay",P,v=>below(v,CFG.p2pTarget),1]];
 const SALES=[["$/CALL","pc",$,pcC,1]];
 const card=([t,k,f,c,dir])=>{
 const list=rows.filter(r=>ok(r[k])).sort((x,y)=>dir*(y[k]-x[k]));
-const body=list.length?list.map((r,i)=>{const m=c(r[k],r);return`<tr${m?' class="'+m+'"':''}><td>${i+1}</td><td>${r.a.name}</td><td class="v">${f(r[k])}</td></tr>`}).join(""):'<tr><td colspan="3">No data yet</td></tr>';
+const body=list.length?list.map((r,i)=>{const m=c(r[k],r);return`<tr${m?' class="'+m+'"':''}><td>${i+1}</td><td>${r.a.name}<span class="tg">${r.a.tag}</span></td><td class="v">${f(r[k])}</td></tr>`}).join(""):'<tr><td colspan="3">No data yet</td></tr>';
 return`<div class="card"><h3>${t}</h3><table><tbody>${body}</tbody></table></div>`};
 $id("lbGrid").innerHTML='<div class="lbsec">MTD METRICS</div>'+MTD.map(card).join("")+'<div class="lbsec">SALES</div>'+SALES.map(card).join("");
+}
+
+/* ---------- Team scores (the "Grand Total" row of the sheet) ---------- */
+function renderTS(){
+const a={name:"Total"};
+if(!getRow(a)){$id("tsNote").textContent='No "Total" row found in the data yet. Paste the sheet with a row whose Agent Name is Total.';$id("tsGrid").innerHTML="";return}
+$id("tsNote").textContent="";
+const g=k=>num(k,a);
+const ans=g("Voice Answered"),aht=g("Voice Answered AHT"),csat=g("Voice CSAT"),res=g("Voice Agent Resolution"),fcr=g("Voice FCR"),take=g("Voice Answered Take Rate (calibrated)"),trf=g("Voice Answered Transfer to Survey % (calibrated)"),xfer=g("Voice Handled Transfer % (calibrated)"),pay=g("Status - Pay to Performance"),acq=g("Revenue - ACQ + CROSS (Post Recoup)"),ren=g("Revenue - REN (Post Recoup)");
+const tot=ok(acq)&&ok(ren)?acq+ren:NaN,pc=ok(acq)&&ok(ans)&&ans?acq/ans:NaN;
+// Passing rate = agents at or above the $/call target / agents with $/call data
+let passed=0,counted=0;
+AGENTS.forEach(x=>{const an=num("Voice Answered",x),aq=num("Revenue - ACQ + CROSS (Post Recoup)",x);if(ok(an)&&ok(aq)&&an){counted++;if(aq/an>=CFG.acqTarget)passed++}});
+const rate=counted?passed/counted:NaN;
+const mtd="<thead><tr><th>METRIC</th><th style='text-align:right'>SCORE</th></tr></thead><tbody>"+
+row3("CALLS",N(ans))+row3("AHT",N(aht),undefined,above(aht,CFG.ahtTarget))+row3("CSAT",N(csat,2),undefined,below(csat,CFG.csatTarget))+row3("VRR",P(res))+row3("FCR",P(fcr))+row3("TAKE RATE",P(take),undefined,below(take,CFG.takeTarget))+row3("TTS",P(trf),undefined,xfC(trf))+row3("TRANSFERS%",P(xfer),undefined,above(xfer,CFG.transferMax))+row3("P2P",P(pay),undefined,below(pay,CFG.p2pTarget))+"</tbody>";
+const sales="<thead><tr><th>METRIC</th><th style='text-align:right'>VALUE</th></tr></thead><tbody>"+
+row3("ACQ",$(acq))+row3("RENEWAL",$(ren))+row3("TOTAL",$(tot))+row3("$/CALL",$(pc),undefined,pcC(pc))+row3("PASSING RATE",P(rate),undefined,below(rate,CFG.passRateTarget))+"</tbody>";
+$id("tsGrid").innerHTML=`<div class="card"><h3>MTD TABLE</h3><table>${mtd}</table></div><div class="card"><h3>SALES TABLE</h3><table>${sales}</table></div>`;
 }
 
 /* ---------- Password ---------- */
@@ -245,7 +280,7 @@ pwThen=then;$id("pwIn").value="";$id("pwErr").textContent="";
 $id("pwModal").classList.add("on");setTimeout(()=>$id("pwIn").focus(),30);
 }
 function tryPw(){
-if($id("pwIn").value===PASSWORD){unlocked=true;$id("pwModal").classList.remove("on");const f=pwThen;pwThen=null;if(f)f()}
+if(hash($id("pwIn").value)===PW_HASH){unlocked=true;$id("pwModal").classList.remove("on");const f=pwThen;pwThen=null;if(f)f()}
 else{$id("pwErr").textContent="Incorrect password.";$id("pwIn").select()}
 }
 $id("pwOk").onclick=tryPw;
@@ -255,7 +290,7 @@ $id("pwCancel").onclick=()=>{pwThen=null;$id("pwModal").classList.remove("on")};
 /* ---------- Data sheet ---------- */
 const colName=c=>{let s="";c++;while(c>0){const m=(c-1)%26;s=String.fromCharCode(65+m)+s;c=Math.floor((c-1)/26)}return s};
 function grid(){
-const R=Math.max(data.length+8,22),C=Math.max(114,...data.map(r=>r.length));
+const R=data.length+8,C=Math.max(26,...data.map(r=>r.length+1));
 let h="<table><thead><tr><th></th>";
 for(let c=0;c<C;c++)h+=`<th>${colName(c)}</th>`;
 h+="</tr></thead><tbody>";
@@ -263,7 +298,7 @@ for(let r=0;r<R;r++){h+=`<tr><td class="n">${r+1}</td>`;for(let c=0;c<C;c++){con
 $id("sheet").innerHTML=h+"</tbody></table>";
 }
 const sheet=$id("sheet"),modal=$id("modal");
-sheet.addEventListener("input",e=>{if(!unlocked)return;const t=e.target;if(!t.dataset||t.dataset.r===undefined)return;const r=+t.dataset.r,c=+t.dataset.c;while(data.length<=r)data.push([]);data[r][c]=t.textContent;save(true);render()});
+sheet.addEventListener("input",e=>{if(!unlocked)return;const t=e.target;if(!t.dataset||t.dataset.r===undefined)return;const r=+t.dataset.r,c=+t.dataset.c;while(data.length<=r)data.push([]);data[r][c]=t.textContent;save(true)});
 sheet.addEventListener("paste",e=>{
 const t=e.target.closest("td[data-r]");if(!t)return;e.preventDefault();
 if(!unlocked){askPw();return}
@@ -271,11 +306,11 @@ const txt=(e.clipboardData||window.clipboardData).getData("text");
 const rows=txt.replace(/\r/g,"").replace(/\n+$/,"").split("\n").map(l=>l.split("\t"));
 const r0=+t.dataset.r,c0=+t.dataset.c;
 rows.forEach((cells,i)=>{while(data.length<=r0+i)data.push([]);cells.forEach((v,j)=>{data[r0+i][c0+j]=v.trim()})});
-save(true);grid();render()});
+save(true);grid()});
 const closeSheet=()=>{modal.classList.remove("on");render()};
 $id("fab").onclick=()=>{askPw(()=>{grid();modal.classList.add("on");render()})};
 $id("close").onclick=closeSheet;
-$id("clear").onclick=()=>{if(!unlocked)return askPw();if(!confirm("Clear ALL pasted data for every agent?"))return;data=[[]];save(true);grid();render()};
+$id("clear").onclick=()=>{if(!unlocked)return askPw();if(!confirm("Clear ALL pasted data for every agent?"))return;data=[[]];save(true);grid()};
 modal.addEventListener("click",e=>{if(e.target===modal)closeSheet()});
 
 function exportDays(){const ids=new Set([...Object.keys(daysPub),...Object.keys(daysAll)]),o={};ids.forEach(id=>{const e=effDays(id);delete e.t;o[id]=e});return o}
@@ -288,15 +323,15 @@ alert("data.json downloaded.\n\nUpload it to your GitHub repo (same folder as in
 $id("export").onclick=()=>unlocked?doExport():askPw(doExport);
 
 /* ---------- Published data (data.json next to index.html) ---------- */
-
 function loadPublished(){
 if(location.protocol==="file:")return;
 fetch("data.json?v="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{
 if(!j||!Array.isArray(j.data)||!j.data.length)return;
 daysPub=j.days||{};pubTs=+j.updated||0;
-if(pubTs>=localTs)data=j.data;   // your own newer pasted data in this browser wins
+if(pubTs>=localTs)data=j.data;
 if(cur&&!$id("modal").classList.contains("on"))render();
 if($id("lb").classList.contains("on"))renderLB();
+if($id("ts").classList.contains("on"))renderTS();
 }).catch(()=>{});
 }
 
