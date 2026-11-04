@@ -59,6 +59,9 @@ tr.orange td{background:#f97316;color:#000}
 .lbgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;padding:14px 0}
 .lbgrid td:first-child{width:36px;text-align:center}
 #tsGrid td:first-child{white-space:nowrap}
+/* Background logo: put bg.png next to index.html. Change --bgop to make it fainter (lower) or stronger (higher). */
+:root{--bgop:.15}
+body::before,#picker::before,#lb::before,#ts::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:url("bg.png") center/min(75vmin,640px) no-repeat;opacity:var(--bgop)}
 .tg{display:block;font-size:10px;letter-spacing:.12em;opacity:.7;font-weight:600}
 .lbbtns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:26px}
 .lbbtn{font:inherit;font-weight:800;font-size:15px;letter-spacing:.16em;color:#000;background:#fff;border:1px solid #fff;border-radius:12px;padding:14px 28px;cursor:pointer}
@@ -82,7 +85,7 @@ tr.orange td{background:#f97316;color:#000}
 <button class="fab" id="fab" title="Open data sheet" aria-label="Open data sheet">&#128214;</button>
 
 <div class="modal" id="lb"><div class="lbwrap">
-<div class="lbtop"><h2>OUTLIERS</h2><button class="switch" id="lbBack" style="position:static">BACK</button></div>
+<div class="lbtop"><h2>LEADERBOARDS</h2><button class="switch" id="lbBack" style="position:static">BACK</button></div>
 <div class="lbgrid" id="lbGrid"></div>
 </div></div>
 
@@ -95,7 +98,7 @@ tr.orange td{background:#f97316;color:#000}
 <div class="modal on" id="picker"><div class="pick">
 <h1>PROGRESS STAT</h1>
 <h2>STEELERS MTD</h2>
-<div class="lbbtns"><button class="lbbtn" id="lbBtn">VIEW OUTLIERS</button><button class="lbbtn" id="tsBtn">VIEW TEAM SCORES</button></div>
+<div class="lbbtns"><button class="lbbtn" id="lbBtn">VIEW LEADERBOARDS</button><button class="lbbtn" id="tsBtn">VIEW TEAM SCORES</button></div>
 <div id="groups"></div>
 </div></div>
 
