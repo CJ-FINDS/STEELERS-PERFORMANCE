@@ -36,7 +36,7 @@ tr.orange td{background:#f97316;color:#000}
 .bar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap}
 .bar b{font-size:15px}.bar small{opacity:.75}
 .bar button,.pwbtns button{border:1px solid var(--edge);border-radius:10px;padding:8px 14px;font-weight:700;cursor:pointer;background:#fff;color:#000;margin-left:6px}
-.bar button#clear,.bar button#export,.pwbtns button.ghost{background:transparent;color:#fff}
+.bar button#clear,.bar button#export,.bar button#csExport,.bar button#csClear,.bar button.ghostb,.pwbtns button.ghost{background:transparent;color:#fff}
 .sheet{overflow:auto;border-radius:10px;background:#fff}
 .sheet table{border-collapse:collapse;border-spacing:0;width:max-content;color:#111}
 .sheet td,.sheet th{border:1px solid #d4d4d4;padding:4px 8px;font-size:12.5px;min-width:90px;height:26px;white-space:nowrap;background:#fff}
@@ -51,7 +51,7 @@ tr.orange td{background:#f97316;color:#000}
 .names{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
 .names button{font:inherit;font-weight:700;font-size:14px;text-align:left;color:#fff;background:var(--card);border:1px solid var(--edge);border-radius:12px;padding:13px 14px;cursor:pointer}
 .names button:hover{background:#fff;color:#000}
-#lb,#ts{z-index:20;background:#000;overflow:auto;align-items:flex-start}
+#lb,#ts,#csat{z-index:20;background:#000;overflow:auto;align-items:flex-start}
 .lbwrap{width:min(1200px,100%);margin:3vh auto 40px}
 .lbtop{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px}
 .lbtop h2{margin:0;font-size:clamp(22px,4vw,32px);letter-spacing:.06em}
@@ -61,7 +61,21 @@ tr.orange td{background:#f97316;color:#000}
 #tsGrid td:first-child{white-space:nowrap}
 /* Background logo: put bg.png next to index.html. Change --bgop to make it fainter (lower) or stronger (higher). */
 :root{--bgop:.15}
-body::before,#picker::before,#lb::before,#ts::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:url("IMAGE/bg.png") center/min(75vmin,640px) no-repeat;opacity:var(--bgop)}
+body::before,#picker::before,#lb::before,#ts::before,#csat::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:url("bg.png") center/min(75vmin,640px) no-repeat;opacity:var(--bgop)}
+.switch.left{left:20px;right:auto}
+#csModal{z-index:25}
+#csat .lbwrap{padding-bottom:90px}
+.csTitle{margin:6px 0 4px;text-align:center;font-size:clamp(22px,4vw,32px);letter-spacing:.06em}
+.csgrid{display:grid;gap:18px;padding:14px 0}
+.scroll{overflow-x:auto}
+.cst{min-width:640px}.cst.wide{min-width:980px}
+.cst th{text-align:center;vertical-align:bottom;padding:0 12px 6px;white-space:normal;min-width:90px;line-height:1.3}
+.cst th:first-child{min-width:170px}
+.cst td,.cst td.v{text-align:center}
+.cst td:first-child{white-space:nowrap}
+.cst td.bad{background:var(--red);color:#fff}
+.cst tr.gt td{background:#fff;color:#000;font-weight:800}
+.cst tr.gt td.bad{background:var(--red);color:#fff}
 .tg{display:block;font-size:10px;letter-spacing:.12em;opacity:.7;font-weight:600}
 .lbbtns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:26px}
 .lbbtn{font:inherit;font-weight:800;font-size:15px;letter-spacing:.16em;color:#000;background:#fff;border:1px solid #fff;border-radius:12px;padding:14px 28px;cursor:pointer}
@@ -73,6 +87,7 @@ body::before,#picker::before,#lb::before,#ts::before{content:"";position:fixed;i
 @media(max-width:560px){.switch{position:static;margin-bottom:10px}}
 </style></head><body>
 <header>
+<button class="switch left" id="toCsat">SWITCH CSAT VIEW</button>
 <button class="switch" id="switch">SWITCH AGENT</button>
 <h1>PROGRESS STAT</h1><h2 class="agent" id="agent"></h2>
 </header>
@@ -85,7 +100,7 @@ body::before,#picker::before,#lb::before,#ts::before{content:"";position:fixed;i
 <button class="fab" id="fab" title="Open data sheet" aria-label="Open data sheet">&#128214;</button>
 
 <div class="modal" id="lb"><div class="lbwrap">
-<div class="lbtop"><h2>OUTLIERS</h2><button class="switch" id="lbBack" style="position:static">BACK</button></div>
+<div class="lbtop"><h2>LEADERBOARDS</h2><button class="switch" id="lbBack" style="position:static">BACK</button></div>
 <div class="lbgrid" id="lbGrid"></div>
 </div></div>
 
@@ -95,12 +110,25 @@ body::before,#picker::before,#lb::before,#ts::before{content:"";position:fixed;i
 <div class="lbgrid" id="tsGrid"></div>
 </div></div>
 
-<div class="modal on" id="picker"><div class="pick">
+<div class="modal on" id="picker"><button class="switch left" id="toCsat2" style="position:fixed;top:calc(22px + env(safe-area-inset-top,0px));left:20px">SWITCH CSAT VIEW</button><div class="pick">
 <h1>PROGRESS STAT</h1>
 <h2>STEELERS MTD</h2>
-<div class="lbbtns"><button class="lbbtn" id="lbBtn">VIEW OUTLIERS</button><button class="lbbtn" id="tsBtn">VIEW TEAM SCORES</button></div>
+<div class="lbbtns"><button class="lbbtn" id="lbBtn">VIEW LEADERBOARDS</button><button class="lbbtn" id="tsBtn">VIEW TEAM SCORES</button></div>
 <div id="groups"></div>
 </div></div>
+
+<div class="modal" id="csat"><div class="lbwrap">
+<div class="lbtop"><button class="switch" id="csBack" style="position:static">SWITCH PROGRESS VIEW</button></div>
+<h2 class="csTitle">CSAT VIEW</h2>
+<div class="note" id="csNote"></div>
+<div class="csgrid" id="csTables"></div>
+<button class="fab" id="csFab" title="Open data sheet" aria-label="Open data sheet">&#128214;</button>
+</div></div>
+
+<div class="modal" id="csModal"><div class="panel">
+<div class="bar"><div><b>CSAT data</b> <small id="csHint"></small></div>
+<div><button id="csAddRows" class="ghostb">+ Rows</button><button id="csAddCols" class="ghostb">+ Cols</button><button id="csT1">Surveys</button><button id="csT2" class="ghostb">Calls</button><button id="csExport" title="Download csat.json to publish for everyone">Export data</button><button id="csClear">Clear</button><button id="csClose">Done</button></div></div>
+<div class="sheet" id="csSheet"></div></div></div>
 
 <div class="modal" id="pwModal"><div class="panel" style="width:min(380px,100%)">
 <b>Password required</b>
@@ -112,7 +140,7 @@ body::before,#picker::before,#lb::before,#ts::before{content:"";position:fixed;i
 
 <div class="modal" id="modal"><div class="panel">
 <div class="bar"><div><b>Data sheet</b> <small>Click a cell and paste (Ctrl+V) your Excel data, headers in row 1</small></div>
-<div><button id="export" title="Download data.json to publish for all agents">Export data</button><button id="clear">Clear</button><button id="close">Done</button></div></div>
+<div><button id="addRows" class="ghostb">+ Rows</button><button id="addCols" class="ghostb">+ Cols</button><button id="export" title="Download data.json to publish for all agents">Export data</button><button id="clear">Clear</button><button id="close">Done</button></div></div>
 <div class="sheet" id="sheet"></div></div></div>
 
 <script>
@@ -123,7 +151,7 @@ const PW_HASH=1692183746526809;
 const hash=(s,seed=0)=>{let h1=0xdeadbeef^seed,h2=0x41c6ce57^seed;for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}
 h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return 4294967296*(2097151&h2)+(h1>>>0)};
 const CFG={
- takeTarget:.25, passRateTarget:.6, acqTarget:5.85, csatTarget:4.9, p2pTarget:.87, fcrTarget:.85, ahtTarget:920, xferSurveyRed:.55, transferMax:.12,
+ takeTarget:.25, passRateTarget:.6, fcrPassTarget:.88, acqTarget:5.85, csatTarget:4.9, p2pTarget:.87, fcrTarget:.85, ahtTarget:920, xferSurveyRed:.55, transferMax:.12,
  defaultDays:{w:22,s:22,a:0,l:0},
  // Incentive: bookings threshold -> payout
  incentive:[[500,1750],[1000,3250],[2000,4750],[3000,5000],[3500,5100],[4000,5250],[4500,5750],[5000,6250],[5500,6500],[6000,7000],[6500,7500],[7000,8000]],
@@ -232,13 +260,16 @@ function route(){
 const id=decodeURIComponent(location.hash.replace(/^#/,""));
 cur=AGENTS.find(a=>a.id===id)||null;
 unlocked=false;
-const isLB=id==="leaderboards",isTS=id==="teamscores";
+const isLB=id==="leaderboards",isTS=id==="teamscores",isCS=id==="csat";
 $id("lb").classList.toggle("on",isLB);
 $id("ts").classList.toggle("on",isTS);
+$id("csat").classList.toggle("on",isCS);
+$id("csModal").classList.remove("on");
 $id("modal").classList.remove("on");
 if(cur){$id("picker").classList.remove("on");render()}
 else if(isLB){$id("picker").classList.remove("on");renderLB()}
 else if(isTS){$id("picker").classList.remove("on");renderTS()}
+else if(isCS){$id("picker").classList.remove("on");csRender()}
 else{buildPicker();$id("picker").classList.add("on")}
 }
 window.addEventListener("hashchange",route);
@@ -277,6 +308,109 @@ row3("ACQ",$(acq))+row3("RENEWAL",$(ren))+row3("TOTAL",$(tot))+row3("$/CALL",$(p
 $id("tsGrid").innerHTML=`<div class="card"><h3>MTD TABLE</h3><table>${mtd}</table></div><div class="card"><h3>SALES TABLE</h3><table>${sales}</table></div>`;
 }
 
+/* ---------- CSAT view (no password: anyone can paste; publish csat.json so everyone sees it) ---------- */
+const CS_AGENTS=[["chino.albarracin","Chino Albarracin"],["blessyanne.opamin","Blessy Anne Opamin"],["kint.mabayo","Kint Mabayo"],["joann.paler","Joann Paler"],["deanjohn.mawili","Dean John Mawili"],["archellie.recinto","Archellie Recinto"],["carla.lanada","Carla Lanada"],["dineceambra.estella","Dinece Ambra Estella"],["julie.baloy","Julie Luz Baloy"],["justine.bustillon","Justine Bustillon"],["jag.vosotros","Jag Vosotros"],["jade.cabiles","Jay Cabiles"],["mark.montano","Mark Montano"],["rommel.gepitulan","Rommel Gepitulan"]];
+const FCR_VALUES=["Yes. resolved in one interaction","Yes. but it took more than one interaction.","No. this is my first interaction and it is not resolved.","No. I have contacted you more than once and it is still not resolved."];
+const FCRN=FCR_VALUES.map(norm);
+const CS_IDX={};CS_AGENTS.forEach(([u,d],i)=>{CS_IDX[norm(u)]=i;CS_IDX[norm(d)]=i});
+let cs={surveys:[],calls:[]},csLocalTs=0,csTab="surveys";
+try{const d=JSON.parse(localStorage.getItem("ps_cs")||"null");if(d){cs.surveys=d.surveys||[];cs.calls=d.calls||[];csLocalTs=+d.ts||0}}catch(e){}
+const csSave=()=>{csLocalTs=Date.now();try{localStorage.setItem("ps_cs",JSON.stringify({surveys:cs.surveys,calls:cs.calls,ts:csLocalTs}))}catch(e){}};
+$id("toCsat").onclick=$id("toCsat2").onclick=()=>{location.hash="csat"};
+$id("csBack").onclick=()=>{location.hash=""};
+
+function csRender(){
+const A=CS_AGENTS.map(()=>({q1s:0,q1n:0,q2s:0,q2n:0,f:[0,0,0,0],calls:NaN}));
+let skipped=0;
+const hs=(cs.surveys[0]||[]).map(norm);
+const ai=hs.indexOf("agentname"),ki=hs.indexOf("knowledgeablerating"),ci=hs.indexOf("courteousrating"),fi=hs.indexOf("fcrvalue");
+if(ai>=0)for(let r=1;r<cs.surveys.length;r++){
+ const row=cs.surveys[r]||[];if(!norm(row[ai]))continue;
+ const i=CS_IDX[norm(row[ai])];if(i===undefined){skipped++;continue}
+ const a=A[i];
+ if(ki>=0){const v=parseFloat(row[ki]);if(ok(v)){a.q1s+=v;a.q1n++}}
+ if(ci>=0){const v=parseFloat(row[ci]);if(ok(v)){a.q2s+=v;a.q2n++}}
+ if(fi>=0){const j=FCRN.indexOf(norm(row[fi]));if(j>=0)a.f[j]++}
+}
+// Calls tab: Agent Name + Calls (or Voice Answered / Number of Calls); headerless 2-column paste also works
+const hc=(cs.calls[0]||[]).map(norm);
+let nc=hc.indexOf("agentname");if(nc<0)nc=0;
+let cc=-1;["calls","voiceanswered","numberofcalls"].some(k=>(cc=hc.indexOf(k))>=0);if(cc<0)cc=1;
+cs.calls.forEach(row=>{const i=CS_IDX[norm((row||[])[nc])];if(i===undefined)return;
+ const v=parseFloat(String(row[cc]==null?"":row[cc]).replace(/,/g,""));
+ if(ok(v))A[i].calls=(ok(A[i].calls)?A[i].calls:0)+v});
+const G={q1s:0,q1n:0,q2s:0,q2n:0,f:[0,0,0,0],calls:NaN};
+A.forEach(a=>{G.q1s+=a.q1s;G.q1n+=a.q1n;G.q2s+=a.q2s;G.q2n+=a.q2n;a.f.forEach((n,k)=>G.f[k]+=n);if(ok(a.calls))G.calls=(ok(G.calls)?G.calls:0)+a.calls});
+const avg=(s,n)=>n?s/n:NaN;
+const m1=a=>{const q1=avg(a.q1s,a.q1n),q2=avg(a.q2s,a.q2n);return{q1,q2,csat:ok(q1)&&ok(q2)?(q1+q2)/2:NaN,take:ok(a.calls)&&a.calls>0?a.q1n/a.calls:NaN}};
+const T=CFG.fcrPassTarget;
+const m2=a=>{const t=a.f[0]+a.f[1]+a.f[2]+a.f[3];const fcr=t?a.f[0]/t:NaN;
+ return{t,vrr:t?(a.f[0]+a.f[1])/t:NaN,fcr,need:!t||fcr>=T?"":Math.ceil(Number(((T*t-a.f[0])/(1-T)).toFixed(9)))}};
+const c=(v,flag)=>`<td class="v${flag?" bad":""}">${v}</td>`;
+const tr=(label,cells,gt)=>`<tr${gt?' class="gt"':''}><td>${label}</td>${cells.join("")}</tr>`;
+const tbl=(cls,heads,rows)=>`<div class="scroll"><table class="cst ${cls}"><thead><tr>${heads.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table></div>`;
+const r1=(label,a,gt)=>{const m=m1(a);return tr(label,[c(N(a.calls)),c(N(m.q1,2)),c(N(m.q2,2)),c(N(m.csat,2),below(m.csat,CFG.csatTarget)),c(P(m.take),below(m.take,CFG.takeTarget))],gt)};
+const r2=(label,a,gt)=>{const m=m2(a);return tr(label,[...a.f.map(n=>c(n?N(n):"")),c(P(m.vrr)),c(P(m.fcr),below(m.fcr,T)),c(m.need===""?"—":N(m.need))],gt)};
+const t1=tbl("",["NAME","CALLS","Q1","Q2","CSAT","TAKE RATE"],[...A.map((a,i)=>r1(CS_AGENTS[i][1],a)),r1("GRAND TOTAL",G,true)]);
+const t2=tbl("wide",["NAME","Q1","Q2","Q3","Q4","VRR","FCR","SURVEYS NEEDED"],[...A.map((a,i)=>r2(CS_AGENTS[i][1],a)),r2("GRAND TOTAL",G,true)]);
+const t3=tbl("",["NAME","CALLS"],A.map((a,i)=>tr(CS_AGENTS[i][1],[c(N(a.calls))])));
+$id("csTables").innerHTML=`<div class="card"><h3>CSAT &amp; TAKE RATE</h3>${t1}</div><div class="card"><h3>FCR &amp; VRR</h3>${t2}</div><div class="card"><h3>CALLS</h3>${t3}</div>`;
+$id("csNote").textContent=cs.surveys.length>1?(skipped?skipped+" survey row(s) skipped: agent not in the name list.":""):"No survey data yet. Tap the book button and paste the sheet.";
+}
+
+/* CSAT data sheet */
+function parseTSV(t){const rows=[];let row=[],f="",q=false;t=t.replace(/\r/g,"");
+for(let i=0;i<t.length;i++){const ch=t[i];
+ if(q){if(ch==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=ch}
+ else if(ch==='"'&&f==="")q=true;
+ else if(ch==="\t"){row.push(f);f=""}
+ else if(ch==="\n"){row.push(f);rows.push(row);row=[];f=""}
+ else f+=ch}
+if(f!==""||row.length){row.push(f);rows.push(row)}
+return rows}
+const CS_CAP=1000;
+function csGrid(){
+const arr=cs[csTab],R=Math.min(arr.length+xRows,CS_CAP),C=Math.max(xCols,...arr.slice(0,CS_CAP).map(r=>r.length+1));
+let h="<table><thead><tr><th></th>";
+for(let k=0;k<C;k++)h+=`<th>${colName(k)}</th>`;
+h+="</tr></thead><tbody>";
+for(let r=0;r<R;r++){h+=`<tr><td class="n">${r+1}</td>`;for(let k=0;k<C;k++){const v=(arr[r]&&arr[r][k])||"";h+=`<td contenteditable="true" data-r="${r}" data-c="${k}">${String(v).replace(/&/g,"&amp;").replace(/</g,"&lt;")}</td>`}h+="</tr>"}
+$id("csSheet").innerHTML=h+"</tbody></table>";
+$id("csHint").textContent=(csTab==="surveys"?"Paste the survey export, headers in row 1.":"Paste Agent Name + Calls (or Voice Answered), headers in row 1.")+(arr.length>CS_CAP?" Showing first "+CS_CAP+" of "+arr.length+" rows.":"");
+}
+function csSetTab(t){csTab=t;$id("csT1").className=t==="surveys"?"":"ghostb";$id("csT2").className=t==="calls"?"":"ghostb";csGrid()}
+$id("csAddRows").onclick=()=>grow($id("csSheet"),csGrid,25,0);$id("csAddCols").onclick=()=>grow($id("csSheet"),csGrid,0,10);
+$id("csT1").onclick=()=>csSetTab("surveys");$id("csT2").onclick=()=>csSetTab("calls");
+$id("csFab").onclick=()=>{csGrid();$id("csModal").classList.add("on")};
+const csClose=()=>{$id("csModal").classList.remove("on");csRender()};
+$id("csClose").onclick=csClose;
+$id("csModal").addEventListener("click",e=>{if(e.target===$id("csModal"))csClose()});
+$id("csSheet").addEventListener("input",e=>{const t=e.target;if(!t.dataset||t.dataset.r===undefined)return;const arr=cs[csTab],r=+t.dataset.r,k=+t.dataset.c;while(arr.length<=r)arr.push([]);arr[r][k]=t.textContent;csSave()});
+$id("csSheet").addEventListener("paste",e=>{
+const t=e.target.closest("td[data-r]");if(!t)return;e.preventDefault();
+const rows=parseTSV((e.clipboardData||window.clipboardData).getData("text"));
+const arr=cs[csTab],r0=+t.dataset.r,c0=+t.dataset.c;
+rows.forEach((cells,i)=>{while(arr.length<=r0+i)arr.push([]);cells.forEach((v,j)=>{arr[r0+i][c0+j]=String(v).trim()})});
+csSave();csGrid()});
+$id("csClear").onclick=()=>{if(!confirm("Clear the "+csTab+" data for everyone's view once published?"))return;cs[csTab]=[];csSave();csGrid()};
+// Export keeps only the columns the tables need (no comments or case IDs in the public file)
+function csSlim(){const h=(cs.surveys[0]||[]);const want=["agentname","knowledgeablerating","courteousrating","fcrvalue"];const idx=want.map(w=>h.findIndex(x=>norm(x)===w));
+if(idx.some(i=>i<0))return cs.surveys;return cs.surveys.map(r=>idx.map(i=>(r||[])[i]==null?"":r[i]))}
+$id("csExport").onclick=()=>{
+const blob=new Blob([JSON.stringify({updated:Date.now(),surveys:csSlim(),calls:cs.calls})],{type:"application/json"});
+const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="csat.json";document.body.appendChild(a);a.click();a.remove();
+setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+alert("csat.json downloaded.\n\nUpload it to your GitHub repo (same folder as index.html) and replace the old csat.json. Everyone will see the update after a few minutes.");
+};
+function loadCsat(){
+if(location.protocol==="file:")return;
+fetch("csat.json?v="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{
+if(!j||!Array.isArray(j.surveys))return;
+if((+j.updated||0)>=csLocalTs){cs.surveys=j.surveys;cs.calls=Array.isArray(j.calls)?j.calls:[]}
+if($id("csat").classList.contains("on"))csRender();
+}).catch(()=>{});
+}
+
 /* ---------- Password ---------- */
 function askPw(then){
 pwThen=then;$id("pwIn").value="";$id("pwErr").textContent="";
@@ -291,9 +425,10 @@ $id("pwIn").addEventListener("keydown",e=>{if(e.key==="Enter")tryPw();if(e.key==
 $id("pwCancel").onclick=()=>{pwThen=null;$id("pwModal").classList.remove("on")};
 
 /* ---------- Data sheet ---------- */
+let xRows=30,xCols=40;   // blank rows / minimum columns shown in the sheets; the + buttons grow them
 const colName=c=>{let s="";c++;while(c>0){const m=(c-1)%26;s=String.fromCharCode(65+m)+s;c=Math.floor((c-1)/26)}return s};
 function grid(){
-const R=data.length+8,C=Math.max(26,...data.map(r=>r.length+1));
+const R=data.length+xRows,C=Math.max(xCols,...data.map(r=>r.length+1));
 let h="<table><thead><tr><th></th>";
 for(let c=0;c<C;c++)h+=`<th>${colName(c)}</th>`;
 h+="</tr></thead><tbody>";
@@ -313,6 +448,9 @@ save(true);grid()});
 const closeSheet=()=>{modal.classList.remove("on");render()};
 $id("fab").onclick=()=>{askPw(()=>{grid();modal.classList.add("on");render()})};
 $id("close").onclick=closeSheet;
+const grow=(el,redraw,r,c)=>{const t=el.scrollTop,l=el.scrollLeft;xRows+=r;xCols+=c;redraw();el.scrollTop=t;el.scrollLeft=l};
+$id("addRows").onclick=()=>grow(sheet,grid,25,0);
+$id("addCols").onclick=()=>grow(sheet,grid,0,10);
 $id("clear").onclick=()=>{if(!unlocked)return askPw();if(!confirm("Clear ALL pasted data for every agent?"))return;data=[[]];save(true);grid()};
 modal.addEventListener("click",e=>{if(e.target===modal)closeSheet()});
 
@@ -340,4 +478,5 @@ if($id("ts").classList.contains("on"))renderTS();
 
 route();
 loadPublished();
+loadCsat();
 </script></body></html>
