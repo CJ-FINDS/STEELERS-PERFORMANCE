@@ -139,7 +139,7 @@ body::before,#picker::before,#lb::before,#ts::before,#csat::before{content:"";po
 </div></div>
 
 <div class="modal" id="modal"><div class="panel">
-<div class="bar"><div><b>Data sheet</b> <small>Click a cell and paste (Ctrl+V) your Excel data, headers in row 1</small></div>
+<div class="bar"><div><b>Data sheet</b> <small>Click cell A1 and paste (Ctrl+V); pasting at A1 replaces all old data. Headers in row 1</small></div>
 <div><button id="addRows" class="ghostb">+ Rows</button><button id="addCols" class="ghostb">+ Cols</button><button id="export" title="Download data.json to publish for all agents">Export data</button><button id="clear">Clear</button><button id="close">Done</button></div></div>
 <div class="sheet" id="sheet"></div></div></div>
 
@@ -184,6 +184,7 @@ const getRow=(a=cur)=>{const i=colIdx("Agent Name");return i<0||!a?null:data.sli
 function num(n,a=cur){const r=getRow(a),i=colIdx(n);if(!r||i<0)return NaN;const s=String(r[i]==null?"":r[i]).trim();if(!s)return NaN;let v=parseFloat(s.replace(/[$,%\s]/g,""));if(isNaN(v))return NaN;if(PCT.includes(norm(n))&&(s.includes("%")||v>1))v/=100;return v}
 const ok=v=>!isNaN(v);
 const P=v=>ok(v)?(v*100).toFixed(1)+"%":"—";
+const P2=v=>ok(v)?(v*100).toFixed(2)+"%":"—";   // percent with 2 decimals
 const N=(v,d=0)=>ok(v)?v.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d}):"—";
 const $=v=>ok(v)?"$"+N(v,2):"—";
 const tier=(v,list,dir,last)=>{if(!ok(v))return NaN;for(const[t,s]of list){if(dir>0?v>=t:v<=t)return s}return last};
@@ -309,7 +310,7 @@ $id("tsGrid").innerHTML=`<div class="card"><h3>MTD TABLE</h3><table>${mtd}</tabl
 }
 
 /* ---------- CSAT view (no password: anyone can paste; publish csat.json so everyone sees it) ---------- */
-const CS_AGENTS=[["chino.albarracin","Chino Albarracin"],["blessyanne.opamin","Blessy Anne Opamin"],["kint.mabayo","Kint Mabayo"],["joann.paler","Joann Paler"],["deanjohn.mawili","Dean John Mawili"],["archellie.recinto","Archellie Recinto"],["carla.lanada","Carla Lanada"],["dineceambra.estella","Dinece Ambra Estella"],["julie.baloy","Julie Luz Baloy"],["justine.bustillon","Justine Bustillon"],["jag.vosotros","Jag Vosotros"],["jade.cabiles","Jay Cabiles"],["mark.montano","Mark Montano"],["rommel.gepitulan","Rommel Gepitulan"]];
+const CS_AGENTS=[["chino.albarracin","Chino Albarracin"],["blessyanne.opamin","Blessy Anne Opamin"],["kint.mabayo","Kint Mabayo"],["joann.paler","Joann Paler"],["rommel.gepitulan","Rommel Gepitulan"],["deanjohn.mawili","Dean John Mawili"],["gestoni.cobar","Gestoni Cobar"],["archellie.recinto","Archellie Recinto"],["carla.lanada","Carla Lanada"],["bi.llevares","Bill Christian Llevares"],["dineceambra.estella","Dinece Ambra Estella"],["julie.baloy","Julie Luz Baloy"],["justine.bustillon","Justine Bustillon"],["jag.vosotros","Jag Vosotros"],["jade.cabiles","Jay Cabiles"],["mark.montano","Mark Montano"]];
 const FCR_VALUES=["Yes. resolved in one interaction","Yes. but it took more than one interaction.","No. this is my first interaction and it is not resolved.","No. I have contacted you more than once and it is still not resolved."];
 const FCRN=FCR_VALUES.map(norm);
 const CS_IDX={};CS_AGENTS.forEach(([u,d],i)=>{CS_IDX[norm(u)]=i;CS_IDX[norm(d)]=i});
@@ -342,20 +343,23 @@ cs.calls.forEach(row=>{const i=CS_IDX[norm((row||[])[nc])];if(i===undefined)retu
 const G={q1s:0,q1n:0,q2s:0,q2n:0,f:[0,0,0,0],calls:NaN};
 A.forEach(a=>{G.q1s+=a.q1s;G.q1n+=a.q1n;G.q2s+=a.q2s;G.q2n+=a.q2n;a.f.forEach((n,k)=>G.f[k]+=n);if(ok(a.calls))G.calls=(ok(G.calls)?G.calls:0)+a.calls});
 const avg=(s,n)=>n?s/n:NaN;
-const m1=a=>{const q1=avg(a.q1s,a.q1n),q2=avg(a.q2s,a.q2n);return{q1,q2,csat:ok(q1)&&ok(q2)?(q1+q2)/2:NaN,take:ok(a.calls)&&a.calls>0?a.q1n/a.calls:NaN}};
+const round2=v=>ok(v)?Math.round((v+1e-9)*100)/100:NaN;   // round half up at the 3rd decimal (4.896 -> 4.90)
+const m1=a=>{const q1=avg(a.q1s,a.q1n),q2=avg(a.q2s,a.q2n);return{q1:round2(q1),q2:round2(q2),csat:round2(ok(q1)&&ok(q2)?(q1+q2)/2:NaN),take:ok(a.calls)&&a.calls>0?a.q1n/a.calls:NaN}   // Take rate = SURVEY (Q1 count) / CALLS
+};
 const T=CFG.fcrPassTarget;
 const m2=a=>{const t=a.f[0]+a.f[1]+a.f[2]+a.f[3];const fcr=t?a.f[0]/t:NaN;
  return{t,vrr:t?(a.f[0]+a.f[1])/t:NaN,fcr,need:!t||fcr>=T?"":Math.ceil(Number(((T*t-a.f[0])/(1-T)).toFixed(9)))}};
 const c=(v,flag)=>`<td class="v${flag?" bad":""}">${v}</td>`;
 const tr=(label,cells,gt)=>`<tr${gt?' class="gt"':''}><td>${label}</td>${cells.join("")}</tr>`;
 const tbl=(cls,heads,rows)=>`<div class="scroll"><table class="cst ${cls}"><thead><tr>${heads.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table></div>`;
-const r1=(label,a,gt)=>{const m=m1(a);return tr(label,[c(N(a.calls)),c(N(m.q1,2)),c(N(m.q2,2)),c(N(m.csat,2),below(m.csat,CFG.csatTarget)),c(P(m.take),below(m.take,CFG.takeTarget))],gt)};
+const r1=(label,a,gt)=>{const m=m1(a);return tr(label,[c(N(a.calls)),c(N(a.q1n)),c(N(m.q1,2)),c(N(m.q2,2)),c(N(m.csat,2),below(m.csat,CFG.csatTarget)),c(P2(m.take),below(m.take,CFG.takeTarget))],gt)};
 const r2=(label,a,gt)=>{const m=m2(a);return tr(label,[...a.f.map(n=>c(n?N(n):"")),c(P(m.vrr)),c(P(m.fcr),below(m.fcr,T)),c(m.need===""?"—":N(m.need))],gt)};
-const t1=tbl("",["NAME","CALLS","Q1","Q2","CSAT","TAKE RATE"],[...A.map((a,i)=>r1(CS_AGENTS[i][1],a)),r1("GRAND TOTAL",G,true)]);
+const t1=tbl("",["NAME","CALLS","SURVEY","Q1","Q2","CSAT","TAKE RATE"],[...A.map((a,i)=>r1(CS_AGENTS[i][1],a)),r1("GRAND TOTAL",G,true)]);
 const t2=tbl("wide",["NAME","Q1","Q2","Q3","Q4","VRR","FCR","SURVEYS NEEDED"],[...A.map((a,i)=>r2(CS_AGENTS[i][1],a)),r2("GRAND TOTAL",G,true)]);
 const t3=tbl("",["NAME","CALLS"],A.map((a,i)=>tr(CS_AGENTS[i][1],[c(N(a.calls))])));
 $id("csTables").innerHTML=`<div class="card"><h3>CSAT &amp; TAKE RATE</h3>${t1}</div><div class="card"><h3>FCR &amp; VRR</h3>${t2}</div><div class="card"><h3>CALLS</h3>${t3}</div>`;
-$id("csNote").textContent=cs.surveys.length>1?(skipped?skipped+" survey row(s) skipped: agent not in the name list.":""):"No survey data yet. Tap the book button and paste the sheet.";
+const noCols=cs.surveys.length>1&&(ai<0||ki<0||ci<0||fi<0);
+$id("csNote").textContent=cs.surveys.length<=1?"No survey data yet. Tap the book button and paste the sheet.":noCols?"Survey columns not found. Paste with headers in row 1 (Agent Name, Knowledgeable rating, Courteous rating, FCR value).":skipped?skipped+" survey row(s) skipped: agent not in the name list.":"";
 }
 
 /* CSAT data sheet */
@@ -376,7 +380,7 @@ for(let k=0;k<C;k++)h+=`<th>${colName(k)}</th>`;
 h+="</tr></thead><tbody>";
 for(let r=0;r<R;r++){h+=`<tr><td class="n">${r+1}</td>`;for(let k=0;k<C;k++){const v=(arr[r]&&arr[r][k])||"";h+=`<td contenteditable="true" data-r="${r}" data-c="${k}">${String(v).replace(/&/g,"&amp;").replace(/</g,"&lt;")}</td>`}h+="</tr>"}
 $id("csSheet").innerHTML=h+"</tbody></table>";
-$id("csHint").textContent=(csTab==="surveys"?"Paste the survey export, headers in row 1.":"Paste Agent Name + Calls (or Voice Answered), headers in row 1.")+(arr.length>CS_CAP?" Showing first "+CS_CAP+" of "+arr.length+" rows.":"");
+$id("csHint").textContent=(csTab==="surveys"?"Click A1 and paste the survey export (replaces old data), headers in row 1.":"Click A1 and paste Agent Name + Calls (or Voice Answered), headers in row 1.")+(arr.length>CS_CAP?" Showing first "+CS_CAP+" of "+arr.length+" rows.":"");
 }
 function csSetTab(t){csTab=t;$id("csT1").className=t==="surveys"?"":"ghostb";$id("csT2").className=t==="calls"?"":"ghostb";csGrid()}
 $id("csAddRows").onclick=()=>grow($id("csSheet"),csGrid,25,0);$id("csAddCols").onclick=()=>grow($id("csSheet"),csGrid,0,10);
@@ -390,6 +394,7 @@ $id("csSheet").addEventListener("paste",e=>{
 const t=e.target.closest("td[data-r]");if(!t)return;e.preventDefault();
 const rows=parseTSV((e.clipboardData||window.clipboardData).getData("text"));
 const arr=cs[csTab],r0=+t.dataset.r,c0=+t.dataset.c;
+if(r0===0&&c0===0)arr.length=0;
 rows.forEach((cells,i)=>{while(arr.length<=r0+i)arr.push([]);cells.forEach((v,j)=>{arr[r0+i][c0+j]=String(v).trim()})});
 csSave();csGrid()});
 $id("csClear").onclick=()=>{if(!confirm("Clear the "+csTab+" data for everyone's view once published?"))return;cs[csTab]=[];csSave();csGrid()};
@@ -441,8 +446,9 @@ sheet.addEventListener("paste",e=>{
 const t=e.target.closest("td[data-r]");if(!t)return;e.preventDefault();
 if(!unlocked){askPw();return}
 const txt=(e.clipboardData||window.clipboardData).getData("text");
-const rows=txt.replace(/\r/g,"").replace(/\n+$/,"").split("\n").map(l=>l.split("\t"));
+const rows=parseTSV(txt);
 const r0=+t.dataset.r,c0=+t.dataset.c;
+if(r0===0&&c0===0)data=[];
 rows.forEach((cells,i)=>{while(data.length<=r0+i)data.push([]);cells.forEach((v,j)=>{data[r0+i][c0+j]=v.trim()})});
 save(true);grid()});
 const closeSheet=()=>{modal.classList.remove("on");render()};
