@@ -3,7 +3,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Progress Stat</title>
 <style>
-:root{--bg:#000;--card:#0b0b0b;--row:#1a1a1a;--text:#fff;--muted:#a3a3a3;--edge:rgba(255,255,255,.85);--soft:rgba(255,255,255,.22);--red:#dc2626;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root{--bg:#000;--card:#0b0b0b;--row:#1a1a1a;--text:#fff;--muted:#a3a3a3;--edge:rgba(255,255,255,.85);--soft:rgba(255,255,255,.22);--red:#9b2c2c;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box}
 html{height:100%}
 body{margin:0;min-height:100%;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--text);background:var(--bg)}
@@ -151,7 +151,7 @@ const PW_HASH=1692183746526809;
 const hash=(s,seed=0)=>{let h1=0xdeadbeef^seed,h2=0x41c6ce57^seed;for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}
 h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return 4294967296*(2097151&h2)+(h1>>>0)};
 const CFG={
- takeTarget:.25, passRateTarget:.6, fcrPassTarget:.88, acqTarget:5.85, csatTarget:4.9, p2pTarget:.87, fcrTarget:.85, ahtTarget:920, xferSurveyRed:.55, transferMax:.12,
+ takeTarget:.25, vrrRed:.92, passRateTarget:.6, fcrPassTarget:.88, acqTarget:5.85, csatTarget:4.9, p2pTarget:.87, fcrTarget:.85, ahtTarget:920, xferSurveyRed:.55, transferMax:.12,
  defaultDays:{w:22,s:22,a:0,l:0},
  // Incentive: bookings threshold -> payout
  incentive:[[500,1750],[1000,3250],[2000,4750],[3000,5000],[3500,5100],[4000,5250],[4500,5750],[5000,6250],[5500,6500],[6000,7000],[6500,7500],[7000,8000]],
@@ -183,7 +183,7 @@ const getRow=(a=cur)=>{const i=colIdx("Agent Name");return i<0||!a?null:data.sli
 // Percent fields: "93%" or 93 -> 0.93; a bare value of 1 or less is treated as already a fraction (1 = 100%).
 function num(n,a=cur){const r=getRow(a),i=colIdx(n);if(!r||i<0)return NaN;const s=String(r[i]==null?"":r[i]).trim();if(!s)return NaN;let v=parseFloat(s.replace(/[$,%\s]/g,""));if(isNaN(v))return NaN;if(PCT.includes(norm(n))&&(s.includes("%")||v>1))v/=100;return v}
 const ok=v=>!isNaN(v);
-const P=v=>ok(v)?(v*100).toFixed(1)+"%":"—";
+const P=v=>ok(v)?(v*100).toFixed(2)+"%":"—";   // every percentage shows 2 decimals
 const P2=v=>ok(v)?(v*100).toFixed(2)+"%":"—";   // percent with 2 decimals
 const N=(v,d=0)=>ok(v)?v.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d}):"—";
 const $=v=>ok(v)?"$"+N(v,2):"—";
@@ -228,7 +228,7 @@ const s=[sc.aht(aht),sc.csat(csat),vrrScore(res,cur.key),sc.trf(xfer),sc.pay(pay
 const abn=n=>n===0?1:n===1?.75:n===2?.5:0;
 const pcnt=s.every(ok)?s[1]*W.csat+s[0]*W.aht+s[2]*W.vrr+s[4]*W.p2p+s[3]*W.transfer+abn(days.a)*W.absence+abn(days.l)*W.late:NaN;
 const mult=days.s?Math.min(1,days.w/days.s):NaN;   // capped at 100%
-const sp=v=>ok(v)?Math.round(v*100)+"%":"—";
+const sp=v=>ok(v)?(v*100).toFixed(2)+"%":"—";
 const ab=n=>sp(abn(n));
 const pr=Math.round(pcnt*1e6)/1e6;
 const initial=ok(pr)?kpiAmt(pr):NaN;
@@ -303,7 +303,7 @@ let passed=0,counted=0;
 AGENTS.forEach(x=>{const an=num("Voice Answered",x),aq=num("Revenue - ACQ + CROSS (Post Recoup)",x);if(ok(an)&&ok(aq)&&an){counted++;if(aq/an>=CFG.acqTarget)passed++}});
 const rate=counted?passed/counted:NaN;
 const mtd="<thead><tr><th>METRIC</th><th style='text-align:right'>SCORE</th></tr></thead><tbody>"+
-row3("CALLS",N(ans))+row3("AHT",N(aht),undefined,above(aht,CFG.ahtTarget))+row3("CSAT",N(csat,2),undefined,below(csat,CFG.csatTarget))+row3("VRR",P(res))+row3("FCR",P(fcr))+row3("TAKE RATE",P(take),undefined,below(take,CFG.takeTarget))+row3("TTS",P(trf),undefined,xfC(trf))+row3("TRANSFERS%",P(xfer),undefined,above(xfer,CFG.transferMax))+row3("P2P",P(pay),undefined,below(pay,CFG.p2pTarget))+"</tbody>";
+row3("CALLS",N(ans))+row3("AHT",N(aht),undefined,above(aht,CFG.ahtTarget))+row3("CSAT",N(csat,2),undefined,below(csat,CFG.csatTarget))+row3("VRR",P(res),undefined,below(res,CFG.vrrRed))+row3("FCR",P(fcr))+row3("TAKE RATE",P(take),undefined,below(take,CFG.takeTarget))+row3("TTS",P(trf),undefined,xfC(trf))+row3("TRANSFERS%",P(xfer),undefined,above(xfer,CFG.transferMax))+row3("P2P",P(pay),undefined,below(pay,CFG.p2pTarget))+"</tbody>";
 const sales="<thead><tr><th>METRIC</th><th style='text-align:right'>VALUE</th></tr></thead><tbody>"+
 row3("ACQ",$(acq))+row3("RENEWAL",$(ren))+row3("TOTAL",$(tot))+row3("$/CALL",$(pc),undefined,pcC(pc))+row3("PASSING RATE",P(rate),undefined,below(rate,CFG.passRateTarget))+"</tbody>";
 $id("tsGrid").innerHTML=`<div class="card"><h3>MTD TABLE</h3><table>${mtd}</table></div><div class="card"><h3>SALES TABLE</h3><table>${sales}</table></div>`;
@@ -353,7 +353,7 @@ const c=(v,flag)=>`<td class="v${flag?" bad":""}">${v}</td>`;
 const tr=(label,cells,gt)=>`<tr${gt?' class="gt"':''}><td>${label}</td>${cells.join("")}</tr>`;
 const tbl=(cls,heads,rows)=>`<div class="scroll"><table class="cst ${cls}"><thead><tr>${heads.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table></div>`;
 const r1=(label,a,gt)=>{const m=m1(a);return tr(label,[c(N(a.calls)),c(N(a.q1n)),c(N(m.q1,2)),c(N(m.q2,2)),c(N(m.csat,2),below(m.csat,CFG.csatTarget)),c(P2(m.take),below(m.take,CFG.takeTarget))],gt)};
-const r2=(label,a,gt)=>{const m=m2(a);return tr(label,[...a.f.map(n=>c(n?N(n):"")),c(P(m.vrr)),c(P(m.fcr),below(m.fcr,T)),c(m.need===""?"—":N(m.need))],gt)};
+const r2=(label,a,gt)=>{const m=m2(a);return tr(label,[...a.f.map(n=>c(n?N(n):"")),c(P(m.vrr),below(m.vrr,CFG.vrrRed)),c(P(m.fcr),below(m.fcr,T)),c(m.need===""?"—":N(m.need))],gt)};
 const t1=tbl("",["NAME","CALLS","SURVEY","Q1","Q2","CSAT","TAKE RATE"],[...A.map((a,i)=>r1(CS_AGENTS[i][1],a)),r1("GRAND TOTAL",G,true)]);
 const t2=tbl("wide",["NAME","Q1","Q2","Q3","Q4","VRR","FCR","SURVEYS NEEDED"],[...A.map((a,i)=>r2(CS_AGENTS[i][1],a)),r2("GRAND TOTAL",G,true)]);
 const t3=tbl("",["NAME","CALLS"],A.map((a,i)=>tr(CS_AGENTS[i][1],[c(N(a.calls))])));
