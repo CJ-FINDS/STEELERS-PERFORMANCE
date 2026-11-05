@@ -3,7 +3,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Progress Stat</title>
 <style>
-:root{--bg:#000;--card:#0b0b0b;--row:#1a1a1a;--text:#fff;--muted:#a3a3a3;--edge:rgba(255,255,255,.85);--soft:rgba(255,255,255,.22);--red:#9b2c2c;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root{--bg:#000;--card:#0b0b0b;--row:#1a1a1a;--text:#e6e6e6;--white:#dedede;--muted:#a3a3a3;--edge:rgba(255,255,255,.6);--soft:rgba(255,255,255,.22);--red:#9b2c2c;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box}
 html{height:100%}
 body{margin:0;min-height:100%;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--text);background:var(--bg)}
@@ -11,7 +11,7 @@ header{padding:28px 20px 8px;text-align:center;position:relative}
 h1{margin:0;font-size:13px;letter-spacing:.3em;color:var(--muted)}
 h2.agent{margin:6px 0 0;font-size:clamp(22px,4vw,34px);letter-spacing:.04em}
 .switch{position:absolute;top:22px;right:20px;border:1px solid var(--edge);background:transparent;color:var(--text);border-radius:10px;padding:8px 14px;font-weight:700;font-size:12px;letter-spacing:.08em;cursor:pointer}
-.switch:hover{background:#fff;color:#000}
+.switch:hover{background:var(--white);color:#000}
 .note{max-width:1200px;margin:10px auto 0;padding:0 20px;text-align:center;font-size:13px;color:var(--muted)}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;padding:16px 20px 100px;max-width:1200px;margin:auto}
 .card{background:var(--card);border:1px solid var(--edge);border-radius:20px;padding:18px}
@@ -22,35 +22,35 @@ th{font-size:11px;letter-spacing:.1em;color:var(--muted);font-weight:600;padding
 tbody td{background:var(--row)}tbody td:first-child{border-radius:10px 0 0 10px}tbody td:last-child{border-radius:0 10px 10px 0}
 td.v{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
 .yes,.no{display:inline-block;padding:3px 12px;border-radius:99px;font-weight:800;font-size:13px}
-.yes{background:#22c55e;color:#04210f}.no{background:var(--red);color:#fff}
-tr.miss td,tr.red td{background:var(--red);color:#fff}
+.yes{background:#22c55e;color:#04210f}.no{background:var(--red);color:var(--text)}
+tr.miss td,tr.red td{background:var(--red);color:var(--text)}
 tr.orange td{background:#f97316;color:#000}
-.edit{width:70px;text-align:right;font:inherit;font-weight:700;color:#fff;background:#000;border:1px solid var(--edge);border-radius:8px;padding:3px 6px}
+.edit{width:70px;text-align:right;font:inherit;font-weight:700;color:var(--text);background:#000;border:1px solid var(--edge);border-radius:8px;padding:3px 6px}
 .edit[readonly]{border-color:var(--soft);cursor:pointer}
-.fab{position:fixed;right:max(20px,env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));width:58px;height:58px;border-radius:50%;border:1px solid #000;background:#fff;color:#000;font-size:26px;cursor:pointer;box-shadow:0 8px 28px rgba(255,255,255,.18)}
+.fab{position:fixed;right:max(20px,env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));width:58px;height:58px;border-radius:50%;border:1px solid #000;background:var(--white);color:#000;font-size:26px;cursor:pointer;box-shadow:0 8px 28px rgba(255,255,255,.18)}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;padding:16px;z-index:5}
 .modal.on{display:flex}
 #pwModal{z-index:30}
 #picker{z-index:20;background:#000;overflow:auto;align-items:flex-start}
-.panel{background:var(--card);border:1px solid var(--edge);border-radius:20px;width:min(1100px,100%);max-height:88vh;display:flex;flex-direction:column;padding:16px;color:#fff}
+.panel{background:var(--card);border:1px solid var(--edge);border-radius:20px;width:min(1100px,100%);max-height:88vh;display:flex;flex-direction:column;padding:16px;color:var(--text)}
 .bar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap}
 .bar b{font-size:15px}.bar small{opacity:.75}
-.bar button,.pwbtns button{border:1px solid var(--edge);border-radius:10px;padding:8px 14px;font-weight:700;cursor:pointer;background:#fff;color:#000;margin-left:6px}
-.bar button#clear,.bar button#export,.bar button#csExport,.bar button#csClear,.bar button.ghostb,.pwbtns button.ghost{background:transparent;color:#fff}
-.sheet{overflow:auto;border-radius:10px;background:#fff}
+.bar button,.pwbtns button{border:1px solid var(--edge);border-radius:10px;padding:8px 14px;font-weight:700;cursor:pointer;background:var(--white);color:#000;margin-left:6px}
+.bar button#clear,.bar button#export,.bar button#csExport,.bar button#csClear,.bar button.ghostb,.pwbtns button.ghost{background:transparent;color:var(--text)}
+.sheet{overflow:auto;border-radius:10px;background:var(--white)}
 .sheet table{border-collapse:collapse;border-spacing:0;width:max-content;color:#111}
-.sheet td,.sheet th{border:1px solid #d4d4d4;padding:4px 8px;font-size:12.5px;min-width:90px;height:26px;white-space:nowrap;background:#fff}
-.sheet th{background:#eee;color:#111;text-align:center;position:sticky;top:0}
-.sheet td.n{background:#eee;color:#111;min-width:34px;text-align:center;position:sticky;left:0}
-.sheet tr:first-of-type td:not(.n){font-weight:700;background:#f5f5f5}
+.sheet td,.sheet th{border:1px solid #d4d4d4;padding:4px 8px;font-size:12.5px;min-width:90px;height:26px;white-space:nowrap;background:var(--white)}
+.sheet th{background:#cfcfcf;color:#111;text-align:center;position:sticky;top:0}
+.sheet td.n{background:#cfcfcf;color:#111;min-width:34px;text-align:center;position:sticky;left:0}
+.sheet tr:first-of-type td:not(.n){font-weight:700;background:#d4d4d4}
 .sheet td:focus{outline:2px solid #000;outline-offset:-2px}
-.pick{width:min(760px,100%);margin:6vh auto 40px;text-align:center}
+.pick{width:min(760px,100%);margin:max(6vh,76px) auto 40px;text-align:center}
 .pick h2{margin:10px 0 6px;font-size:clamp(24px,5vw,36px);letter-spacing:.04em}
 .grp{margin-bottom:22px;text-align:left}
 .grp h4{margin:0 0 10px;font-size:12px;letter-spacing:.2em;color:var(--muted);border-bottom:1px solid var(--soft);padding-bottom:8px}
 .names{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
-.names button{font:inherit;font-weight:700;font-size:14px;text-align:left;color:#fff;background:var(--card);border:1px solid var(--edge);border-radius:12px;padding:13px 14px;cursor:pointer}
-.names button:hover{background:#fff;color:#000}
+.names button{font:inherit;font-weight:700;font-size:14px;text-align:left;color:var(--text);background:var(--card);border:1px solid var(--edge);border-radius:12px;padding:13px 14px;cursor:pointer}
+.names button:hover{background:var(--white);color:#000}
 #lb,#ts,#csat{z-index:20;background:#000;overflow:auto;align-items:flex-start}
 .lbwrap{width:min(1200px,100%);margin:3vh auto 40px}
 .lbtop{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px}
@@ -78,21 +78,21 @@ body::before,#picker::before,#lb::before,#ts::before,#csat::before{content:"";po
 .cst th:first-child{min-width:170px}
 .cst td,.cst td.v{text-align:center}
 .cst td:first-child{white-space:nowrap}
-.cst td.bad{background:var(--red);color:#fff}
-.cst tr.gt td{background:#fff;color:#000;font-weight:800}
-.cst tr.gt td.bad{background:var(--red);color:#fff}
+.cst td.bad{background:var(--red);color:var(--text)}
+.cst tr.gt td{background:var(--white);color:#000;font-weight:800}
+.cst tr.gt td.bad{background:var(--red);color:var(--text)}
 .tg{display:block;font-size:10px;letter-spacing:.12em;opacity:.7;font-weight:600}
 .lbbtns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:26px}
-.lbbtn{font:inherit;font-weight:800;font-size:15px;letter-spacing:.16em;color:#000;background:#fff;border:1px solid #fff;border-radius:12px;padding:14px 28px;cursor:pointer}
-.lbbtn:hover{background:#000;color:#fff;border-color:var(--edge)}
+.lbbtn{font:inherit;font-weight:800;font-size:15px;letter-spacing:.16em;color:#000;background:var(--white);border:1px solid var(--white);border-radius:12px;padding:14px 28px;cursor:pointer}
+.lbbtn:hover{background:#000;color:var(--text);border-color:var(--edge)}
 .empty{color:var(--muted);font-size:14px;padding:10px 0}
-#pwIn{width:100%;font:inherit;font-size:16px;color:#fff;background:#000;border:1px solid var(--edge);border-radius:10px;padding:11px 12px;margin:12px 0 6px}
+#pwIn{width:100%;font:inherit;font-size:16px;color:var(--text);background:#000;border:1px solid var(--edge);border-radius:10px;padding:11px 12px;margin:12px 0 6px}
 #pwErr{min-height:20px;font-size:13px;color:#ff6b6b;font-weight:700}
 .pwbtns{display:flex;justify-content:flex-end;margin-top:8px}
 @media(max-width:560px){.switch{position:static;margin-bottom:10px}}
 </style></head><body>
 <header>
-<button class="switch left" id="toCsat">SWITCH CSAT VIEW</button>
+<button class="switch left" id="toCsat">SWITCH TO HOURLY CSAT</button>
 <button class="switch" id="switch">SWITCH AGENT</button>
 <h1>PROGRESS STAT</h1><h2 class="agent" id="agent"></h2>
 </header>
@@ -115,7 +115,7 @@ body::before,#picker::before,#lb::before,#ts::before,#csat::before{content:"";po
 <div class="lbgrid" id="tsGrid"></div>
 </div></div>
 
-<div class="modal on" id="picker"><button class="switch left" id="toCsat2" style="position:fixed;top:calc(22px + env(safe-area-inset-top,0px));left:20px">SWITCH TO HOURLY CSAT</button><div class="pick">
+<div class="modal on" id="picker"><button class="switch left" id="toCsat2" style="position:fixed;top:calc(22px + env(safe-area-inset-top,0px));left:20px">SWITCH CSAT VIEW</button><div class="pick">
 <h1>PROGRESS STAT</h1>
 <h2>STEELERS MTD</h2>
 <div class="lbbtns"><button class="lbbtn" id="lbBtn">VIEW LEADERBOARDS</button><button class="lbbtn" id="tsBtn">VIEW TEAM SCORES</button></div>
@@ -124,7 +124,7 @@ body::before,#picker::before,#lb::before,#ts::before,#csat::before{content:"";po
 
 <div class="modal" id="csat"><div class="lbwrap">
 <div class="lbtop"><button class="switch" id="csBack" style="position:static">SWITCH PROGRESS VIEW</button></div>
-<h2 class="csTitle">CSAT VIEW</h2>
+<h2 class="csTitle">HOURLY CSAT VIEW</h2>
 <div class="note" id="csNote"></div>
 <div class="csgrid" id="csTables"></div>
 <button class="fab" id="csFab" title="Open data sheet" aria-label="Open data sheet">&#128214;</button>
@@ -189,7 +189,6 @@ const getRow=(a=cur)=>{const i=colIdx("Agent Name");return i<0||!a?null:data.sli
 function num(n,a=cur){const r=getRow(a),i=colIdx(n);if(!r||i<0)return NaN;const s=String(r[i]==null?"":r[i]).trim();if(!s)return NaN;let v=parseFloat(s.replace(/[$,%\s]/g,""));if(isNaN(v))return NaN;if(PCT.includes(norm(n))&&(s.includes("%")||v>1))v/=100;return v}
 const ok=v=>!isNaN(v);
 const P=v=>ok(v)?(v*100).toFixed(2)+"%":"—";   // every percentage shows 2 decimals
-const P2=v=>ok(v)?(v*100).toFixed(2)+"%":"—";   // percent with 2 decimals
 const N=(v,d=0)=>ok(v)?v.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d}):"—";
 const $=v=>ok(v)?"$"+N(v,2):"—";
 const tier=(v,list,dir,last)=>{if(!ok(v))return NaN;for(const[t,s]of list){if(dir>0?v>=t:v<=t)return s}return last};
@@ -319,6 +318,7 @@ const CS_AGENTS=[["chino.albarracin","Chino Albarracin"],["blessyanne.opamin","B
 const FCR_VALUES=["Yes. resolved in one interaction","Yes. but it took more than one interaction.","No. this is my first interaction and it is not resolved.","No. I have contacted you more than once and it is still not resolved."];
 const FCRN=FCR_VALUES.map(norm);
 const CS_IDX={};CS_AGENTS.forEach(([u,d],i)=>{CS_IDX[norm(u)]=i;CS_IDX[norm(d)]=i});
+CS_IDX[norm("Carla Lynn Lanada")]=CS_IDX[norm("carla.lanada")];   // alias: main sheet spelling
 let cs={surveys:[],calls:[]},csLocalTs=0,csTab="surveys";
 try{const d=JSON.parse(localStorage.getItem("ps_cs")||"null");if(d){cs.surveys=d.surveys||[];cs.calls=d.calls||[];csLocalTs=+d.ts||0}}catch(e){}
 const csSave=()=>{csLocalTs=Date.now();try{localStorage.setItem("ps_cs",JSON.stringify({surveys:cs.surveys,calls:cs.calls,ts:csLocalTs}))}catch(e){}};
@@ -357,7 +357,7 @@ const m2=a=>{const t=a.f[0]+a.f[1]+a.f[2]+a.f[3];const fcr=t?a.f[0]/t:NaN;
 const c=(v,flag)=>`<td class="v${flag?" bad":""}">${v}</td>`;
 const tr=(label,cells,gt)=>`<tr${gt?' class="gt"':''}><td>${label}</td>${cells.join("")}</tr>`;
 const tbl=(cls,heads,rows)=>`<div class="scroll"><table class="cst ${cls}"><thead><tr>${heads.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table></div>`;
-const r1=(label,a,gt)=>{const m=m1(a);return tr(label,[c(N(a.calls)),c(N(a.q1n)),c(N(m.q1,2)),c(N(m.q2,2)),c(N(m.csat,2),below(m.csat,CFG.csatTarget)),c(P2(m.take),below(m.take,CFG.takeTarget))],gt)};
+const r1=(label,a,gt)=>{const m=m1(a);return tr(label,[c(N(a.calls)),c(N(a.q1n)),c(N(m.q1,2)),c(N(m.q2,2)),c(N(m.csat,2),below(m.csat,CFG.csatTarget)),c(P(m.take),below(m.take,CFG.takeTarget))],gt)};
 const r2=(label,a,gt)=>{const m=m2(a);return tr(label,[...a.f.map(n=>c(n?N(n):"")),c(P(m.vrr),below(m.vrr,CFG.vrrRed)),c(P(m.fcr),below(m.fcr,T)),c(m.need===""?"—":N(m.need))],gt)};
 const t1=tbl("",["NAME","CALLS","SURVEY","Q1","Q2","CSAT","TAKE RATE"],[...A.map((a,i)=>r1(CS_AGENTS[i][1],a)),r1("GRAND TOTAL",G,true)]);
 const t2=tbl("wide",["NAME","Q1","Q2","Q3","Q4","VRR","FCR","SURVEYS NEEDED"],[...A.map((a,i)=>r2(CS_AGENTS[i][1],a)),r2("GRAND TOTAL",G,true)]);
