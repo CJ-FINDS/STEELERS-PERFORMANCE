@@ -63,6 +63,11 @@ tr.orange td{background:#f97316;color:#000}
 :root{--bgop:.15}
 body::before,#picker::before,#lb::before,#ts::before,#csat::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:url("bg.png") center/min(75vmin,640px) no-repeat;opacity:var(--bgop)}
 .switch.left{left:20px;right:auto}
+/* Attention shake for the SWITCH CSAT VIEW buttons: shakes on load, then every 1.5s */
+@keyframes shake{0%{transform:translateX(0)}4%{transform:translateX(-6px)}8%{transform:translateX(6px)}12%{transform:translateX(-6px)}16%{transform:translateX(6px)}20%{transform:translateX(-3px)}24%{transform:translateX(3px)}28%,100%{transform:translateX(0)}}
+#toCsat,#toCsat2{animation:shake 1.5s ease-in-out infinite}
+#toCsat:hover,#toCsat2:hover{animation:none}
+@media (prefers-reduced-motion:reduce){#toCsat,#toCsat2{animation:none}}
 #csModal{z-index:25}
 #csat .lbwrap{padding-bottom:90px}
 .csTitle{margin:6px 0 4px;text-align:center;font-size:clamp(22px,4vw,32px);letter-spacing:.06em}
