@@ -156,7 +156,7 @@ const PW_HASH=1692183746526809;
 const hash=(s,seed=0)=>{let h1=0xdeadbeef^seed,h2=0x41c6ce57^seed;for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}
 h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return 4294967296*(2097151&h2)+(h1>>>0)};
 const CFG={
- takeTarget:.25, vrrRed:.92, passRateTarget:.6, fcrPassTarget:.88, acqTarget:5.85, csatTarget:4.9, p2pTarget:.87, fcrTarget:.85, ahtTarget:920, xferSurveyRed:.55, transferMax:.12,
+ takeTarget:.25, vrrRed:.92, passRateTarget:.6, fcrPassTarget:.88, acqTarget:5.85, csatTarget:4.9, p2pTarget:.85, fcrTarget:.85, ahtTarget:920, xferSurveyRed:.55, transferMax:.12,
  defaultDays:{w:22,s:22,a:0,l:0},
  // Incentive: bookings threshold -> payout
  incentive:[[500,1750],[1000,3250],[2000,4750],[3000,5000],[3500,5100],[4000,5250],[4500,5750],[5000,6250],[5500,6500],[6000,7000],[6500,7500],[7000,8000]],
@@ -206,6 +206,7 @@ const vrrC=(v,a)=>!ok(v)?"":v<a.red?"miss":v<a.org?"orange":"";
 const pcC=v=>!ok(v)?"":v<CFG.acqTarget?"miss":v<CFG.acqTarget+.5?"orange":"";
 const below=(v,t)=>ok(v)&&v<t?"miss":"";
 const above=(v,t)=>ok(v)&&v>t?"miss":"";
+const p2pC=v=>ok(v)&&v<CFG.p2pTarget?"miss":"";   // P2P: red only when below 85%
 const xfC=v=>ok(v)&&v<CFG.xferSurveyRed?"red":"";
 const row3=(a,b,c,m)=>`<tr${m?' class="'+m+'"':''}><td>${a}</td><td class="v">${b}</td>${c===undefined?"":`<td class="v">${c}</td>`}</tr>`;
 const badge=q=>q===null?"—":`<span class="${q?"yes":"no"}">${q?"YES":"NO"}</span>`;
@@ -218,7 +219,7 @@ $id("agent").textContent=cur.name.toUpperCase();
 $id("note").textContent=getRow()?"":"No data found for this agent yet. Ask your supervisor to load the latest data.";
 const ans=num("Voice Answered"),aht=num("Voice Answered AHT"),csat=num("Voice CSAT"),fcr=num("Voice FCR"),res=num("Voice Agent Resolution"),take=num("Voice Answered Take Rate (calibrated)"),trf=num("Voice Answered Transfer to Survey % (calibrated)"),xfer=num("Voice Handled Transfer % (calibrated)"),pay=num("Status - Pay to Performance"),book=num("Revenue - Bookings (Post Recoup)"),acq=num("Revenue - ACQ + CROSS (Post Recoup)"),ren=num("Revenue - REN (Post Recoup)");
 $id("mtd").innerHTML="<thead><tr><th>METRIC</th><th style='text-align:right'>SCORE</th></tr></thead><tbody>"+
-row3("CALLS",N(ans))+row3("AHT",N(aht),undefined,above(aht,CFG.ahtTarget))+row3("CSAT",N(csat,2),undefined,below(csat,CFG.csatTarget))+row3("VRR",P(res),undefined,vrrC(res,cur))+row3("FCR",P(fcr))+row3("TAKE RATE",P(take),undefined,below(take,CFG.takeTarget))+row3("XFER TO SURVEY",P(trf),undefined,xfC(trf))+row3("TRANSFERS%",P(xfer),undefined,above(xfer,CFG.transferMax))+row3("P2P",P(pay),undefined,below(pay,CFG.p2pTarget))+"</tbody>";
+row3("CALLS",N(ans))+row3("AHT",N(aht),undefined,above(aht,CFG.ahtTarget))+row3("CSAT",N(csat,2),undefined,below(csat,CFG.csatTarget))+row3("VRR",P(res),undefined,vrrC(res,cur))+row3("FCR",P(fcr))+row3("TAKE RATE",P(take),undefined,below(take,CFG.takeTarget))+row3("XFER TO SURVEY",P(trf),undefined,xfC(trf))+row3("TRANSFERS%",P(xfer),undefined,above(xfer,CFG.transferMax))+row3("P2P",P(pay),undefined,p2pC(pay))+"</tbody>";
 const tot=ok(acq)&&ok(ren)?acq+ren:NaN,pc=ok(acq)&&ok(ans)&&ans?acq/ans:NaN;
 const miss=ok(pc)?(pc<CFG.acqTarget?CFG.acqTarget*ans-acq:0):NaN;
 let inc=NaN;if(ok(book)){inc=0;CFG.incentive.forEach(([k,v])=>{if(book>=k)inc=v})}
@@ -242,7 +243,7 @@ const inp=(id,v)=>`<input class="edit" type="text" inputmode="decimal" id="${id}
 $id("kpi").innerHTML="<thead><tr><th>METRIC</th><th style='text-align:right'>ACTUAL</th><th style='text-align:right'>SCORE</th></tr></thead><tbody>"+
 `<tr><td>Days Worked</td><td class="v" colspan="2">${inp("dw",days.w)}</td></tr>`+
 `<tr><td>Days Scheduled</td><td class="v" colspan="2">${inp("ds",days.s)}</td></tr>`+
-row3("AHT",N(aht),sp(s[0]),above(aht,CFG.ahtTarget))+row3("CSAT",N(csat,2),sp(s[1]),below(csat,CFG.csatTarget))+row3("VRR",P(res),sp(s[2]),vrrC(res,cur))+row3("TRANSFER%",P(xfer),sp(s[3]),above(xfer,CFG.transferMax))+row3("P2P",P(pay),sp(s[4]),below(pay,CFG.p2pTarget))+
+row3("AHT",N(aht),sp(s[0]),above(aht,CFG.ahtTarget))+row3("CSAT",N(csat,2),sp(s[1]),below(csat,CFG.csatTarget))+row3("VRR",P(res),sp(s[2]),vrrC(res,cur))+row3("TRANSFER%",P(xfer),sp(s[3]),above(xfer,CFG.transferMax))+row3("P2P",P(pay),sp(s[4]),p2pC(pay))+
 `<tr><td>ABSENCE</td><td class="v">${inp("da",days.a)}</td><td class="v">${ab(days.a)}</td></tr>`+`<tr><td>LATE</td><td class="v">${inp("dl",days.l)}</td><td class="v">${ab(days.l)}</td></tr>`+
 row3("MULTIPLIER","",sp(mult))+row3("PERCENTAGE","",sp(pcnt))+row3("INITIAL KPI","",$(initial))+row3("FINAL KPI","",$(ok(initial)&&ok(mult)?mult*initial:NaN))+row3("QUALIFIED?","",badge(q2))+"</tbody>";
 const bind=(id,key,conv)=>{const el=$id(id);
@@ -285,7 +286,7 @@ function renderLB(){
 const rows=AGENTS.map(a=>{const g=k=>num(k,a);const ans=g("Voice Answered"),acq=g("Revenue - ACQ + CROSS (Post Recoup)");
 return{a,aht:g("Voice Answered AHT"),csat:g("Voice CSAT"),res:g("Voice Agent Resolution"),fcr:g("Voice FCR"),take:g("Voice Answered Take Rate (calibrated)"),trf:g("Voice Answered Transfer to Survey % (calibrated)"),xf:g("Voice Handled Transfer % (calibrated)"),pay:g("Status - Pay to Performance"),pc:ok(acq)&&ok(ans)&&ans?acq/ans:NaN}});
 // [title, field, formatter, colour rule, order: 1 = highest first, -1 = lowest first]
-const MTD=[["AHT","aht",v=>N(v),v=>above(v,CFG.ahtTarget),-1],["CSAT","csat",v=>N(v,2),v=>below(v,CFG.csatTarget),1],["VRR","res",P,(v,r)=>vrrC(v,r.a),1],["FCR","fcr",P,v=>below(v,CFG.fcrTarget),1],["TAKE RATE","take",P,v=>below(v,CFG.takeTarget),1],["XFER TO SURVEY","trf",P,v=>xfC(v),1],["TRANSFERS%","xf",P,v=>above(v,CFG.transferMax),-1],["P2P","pay",P,v=>below(v,CFG.p2pTarget),1]];
+const MTD=[["AHT","aht",v=>N(v),v=>above(v,CFG.ahtTarget),-1],["CSAT","csat",v=>N(v,2),v=>below(v,CFG.csatTarget),1],["VRR","res",P,(v,r)=>vrrC(v,r.a),1],["FCR","fcr",P,v=>below(v,CFG.fcrTarget),1],["TAKE RATE","take",P,v=>below(v,CFG.takeTarget),1],["XFER TO SURVEY","trf",P,v=>xfC(v),1],["TRANSFERS%","xf",P,v=>above(v,CFG.transferMax),-1],["P2P","pay",P,v=>p2pC(v),1]];
 const SALES=[["$/CALL","pc",$,pcC,1]];
 const card=([t,k,f,c,dir])=>{
 const list=rows.filter(r=>ok(r[k])).sort((x,y)=>dir*(y[k]-x[k]));
@@ -307,7 +308,7 @@ let passed=0,counted=0;
 AGENTS.forEach(x=>{const an=num("Voice Answered",x),aq=num("Revenue - ACQ + CROSS (Post Recoup)",x);if(ok(an)&&ok(aq)&&an){counted++;if(aq/an>=CFG.acqTarget)passed++}});
 const rate=counted?passed/counted:NaN;
 const mtd="<thead><tr><th>METRIC</th><th style='text-align:right'>SCORE</th></tr></thead><tbody>"+
-row3("CALLS",N(ans))+row3("AHT",N(aht),undefined,above(aht,CFG.ahtTarget))+row3("CSAT",N(csat,2),undefined,below(csat,CFG.csatTarget))+row3("VRR",P(res),undefined,below(res,CFG.vrrRed))+row3("FCR",P(fcr))+row3("TAKE RATE",P(take),undefined,below(take,CFG.takeTarget))+row3("TTS",P(trf),undefined,xfC(trf))+row3("TRANSFERS%",P(xfer),undefined,above(xfer,CFG.transferMax))+row3("P2P",P(pay),undefined,below(pay,CFG.p2pTarget))+"</tbody>";
+row3("CALLS",N(ans))+row3("AHT",N(aht),undefined,above(aht,CFG.ahtTarget))+row3("CSAT",N(csat,2),undefined,below(csat,CFG.csatTarget))+row3("VRR",P(res),undefined,below(res,CFG.vrrRed))+row3("FCR",P(fcr))+row3("TAKE RATE",P(take),undefined,below(take,CFG.takeTarget))+row3("TTS",P(trf),undefined,xfC(trf))+row3("TRANSFERS%",P(xfer),undefined,above(xfer,CFG.transferMax))+row3("P2P",P(pay),undefined,p2pC(pay))+"</tbody>";
 const sales="<thead><tr><th>METRIC</th><th style='text-align:right'>VALUE</th></tr></thead><tbody>"+
 row3("ACQ",$(acq))+row3("RENEWAL",$(ren))+row3("TOTAL",$(tot))+row3("$/CALL",$(pc),undefined,pcC(pc))+row3("PASSING RATE",P(rate),undefined,below(rate,CFG.passRateTarget))+"</tbody>";
 $id("tsGrid").innerHTML=`<div class="card"><h3>MTD TABLE</h3><table>${mtd}</table></div><div class="card"><h3>SALES TABLE</h3><table>${sales}</table></div>`;
