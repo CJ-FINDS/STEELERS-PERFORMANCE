@@ -180,7 +180,7 @@ const PW_HASH=1692183746526809;
 const hash=(s,seed=0)=>{let h1=0xdeadbeef^seed,h2=0x41c6ce57^seed;for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}
 h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return 4294967296*(2097151&h2)+(h1>>>0)};
 const CFG={
- takeTarget:.25, vrrRed:.92, passRateTarget:.6, fcrPassTarget:.88, acqTarget:5.85, csatTarget:4.9, p2pTarget:.85, fcrTarget:.85, ahtTarget:920, xferSurveyRed:.55, transferMax:.12,
+ takeTarget:.36, vrrRed:.92, passRateTarget:.6, fcrPassTarget:.88, acqTarget:5.85, csatTarget:4.9, p2pTarget:.85, fcrTarget:.85, ahtTarget:920, xferSurveyRed:.55, transferMax:.12,
  defaultDays:{w:22,s:22,a:0,l:0},
  // Incentive: bookings threshold -> payout
  incentive:[[500,1750],[1000,3250],[2000,4750],[3000,5000],[3500,5100],[4000,5250],[4500,5750],[5000,6250],[5500,6500],[6000,7000],[6500,7500],[7000,8000]],
