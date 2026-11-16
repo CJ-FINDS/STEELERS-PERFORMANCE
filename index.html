@@ -375,14 +375,14 @@ for(let r=1;r<cs.rows.length;r++){const row=cs.rows[r]||[];if(!row.some(x=>Strin
   f:C.fcr>=0?FCRN.indexOf(norm(row[C.fcr])):-1,
   cat:(C.cat>=0&&String(row[C.cat]||"").trim())||"(blank)",
   sub:(C.sub>=0&&String(row[C.sub]||"").trim())||"(blank)"})}
-out.forEach(r=>{r.a=r.k&&r.c?(r.k+r.c)/2:0});   // CSAT of one survey = average of its Knowledge and Courtesy scores
+out.forEach(r=>{r.a=r.k&&r.c?(r.k+r.c)/2:r.k||r.c||0});   // CSAT of one survey = average of the Knowledge and Courtesy scores it has (one score alone counts as is)
 return{C,out}}
 
 function csRender(){
 const{C,out:all}=csRecs();
-const out=all.filter(r=>r.a),noAvg=all.length-out.length;   // surveys missing Knowledge or Courtesy have no average and are skipped
+const out=all.filter(r=>r.a),noAvg=all.length-out.length;   // a row with neither score is not a survey and is skipped
 const miss=[["Knowledgeable rating",C.k],["Courteous rating",C.c],["FCR value",C.fcr],["Category",C.cat],["Sub category",C.sub],["Pega case",C.pega]].filter(x=>x[1]<0).map(x=>x[0]);
-$id("csNote").textContent=cs.rows.length<=1?"No data yet. Tap the book button and paste the sheet at A1 (headers in row 1).":miss.length?"Columns not found: "+miss.join(", ")+". Check the header names in row 1.":noAvg?noAvg+" survey(s) skipped: missing a Knowledge or Courtesy score.":"";
+$id("csNote").textContent=cs.rows.length<=1?"No data yet. Tap the book button and paste the sheet at A1 (headers in row 1).":miss.length?"Columns not found: "+miss.join(", ")+". Check the header names in row 1.":noAvg?noAvg+" row(s) skipped: no Knowledge or Courtesy score.":"";
 const csatBars=[1,1.5,2,2.5,3,3.5,4,4.5,5].map(s=>({key:"s"+s,label:String(s),sc:1,bad:s<=4,cls:s===5?"g5":s===4.5?"g45":"",n:out.filter(r=>r.a===s).length}));
 const fcrBars=[0,1,2,3].map(i=>({key:"f"+i,label:FCR_LABELS[i],bad:i>=2,cls:i===0?"g5":i===1?"g45":"",n:out.filter(r=>r.f===i).length}));
 const chart=(bars,title,sub)=>{const mx=Math.max(1,...bars.map(b=>b.n));
