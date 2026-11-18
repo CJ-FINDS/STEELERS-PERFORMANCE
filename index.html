@@ -111,7 +111,7 @@ body::before,#picker::before,#lb::before,#ts::before,#csat::before{content:"";po
 .bar2.sc .bl{min-height:0;font-size:13px;color:var(--text)}
 .dr .catrow td{background:var(--white);color:#000;font-weight:800}
 .dr .subrow td:first-child{padding-left:28px}
-.cst.agt{min-width:1000px}
+.cst.agt{min-width:1250px;table-layout:fixed}
 .cst.agt th{min-width:46px;font-size:11px;letter-spacing:.06em}
 .cst.agt thead tr:first-child th:first-child{min-width:190px;text-align:left}
 .cst.agt thead tr:nth-child(2) th:first-child{min-width:46px;text-align:center}
@@ -638,9 +638,9 @@ if(csSel){
 const tabs=`<div class="qtog">${[["team","TEAM"],["agent","BY AGENT"],["trend","TREND"]].map(([k,l])=>`<button data-view="${k}"${csView===k?' class="on"':""}>${l}</button>`).join("")}</div>`;
 
 const SB=[5,4.5,4,3.5,3,2.5,2,1.5,1],FS=["RESOLVED","RESOLVED, MORE THAN 1","NOT RESOLVED, 1ST","NOT RESOLVED, REPEAT"];
-const chip=(n,key,cls)=>`<td class="v">${n?`<button class="chip ${cls}${csSel===key?" sel":""}" data-k="${key}">${n}</button>`:""}</td><td class="v z">·</td>`;
+const chip=(n,key,cls)=>`<td class="v">${n?`<button class="chip ${cls}${csSel===key?" sel":""}" data-k="${key}">${n}</button>`:""}</td>`;
 const agentCard=()=>{
- let h=`<div class="card"><h3>SCORES PER AGENT</h3><div class="note" style="padding:0;text-align:left;margin:0 0 8px">CSAT = average of Knowledge and Courtesy per survey. Numbers are survey counts.</div><div class="hint">TAP A SCORE TO SEE ITS CATEGORIES</div><div class="scroll"><table class="cst agt"><thead><tr><th rowspan="2">NAME</th><th rowspan="2">SURVEYS</th><th class="grp2" colspan="9">CSAT</th><th class="grp2" colspan="4">FCR</th></tr><tr>${SB.map(s=>`<th>${s}</th>`).join("")}${FS.map(l=>`<th>${l}</th>`).join("")}</tr></thead><tbody>`;
+ let h=`<div class="card"><h3>SCORES PER AGENT</h3><div class="note" style="padding:0;text-align:left;margin:0 0 8px">CSAT = average of Knowledge and Courtesy per survey. Numbers are survey counts.</div><div class="hint">TAP A SCORE TO SEE ITS CATEGORIES</div><div class="scroll"><table class="cst agt"><colgroup><col style="width:190px"><col style="width:70px">${SB.map(()=>'<col style="width:56px">').join("")}<col><col><col><col></colgroup><thead><tr><th rowspan="2">NAME</th><th rowspan="2">SURVEYS</th><th class="grp2" colspan="9">CSAT</th><th class="grp2" colspan="4">FCR</th></tr><tr>${SB.map(s=>`<th>${s}</th>`).join("")}${FS.map(l=>`<th>${l}</th>`).join("")}</tr></thead><tbody>`;
  const rowFor=(id,nm)=>{const mine=out.filter(r=>r.ag===id);
   return `<tr><td>${esc(nm)}</td><td class="v">${mine.length||"·"}</td>`+
    SB.map(s=>chip(mine.filter(r=>r.a===s).length,"a:"+id+":s"+s,s<=4?"bad":s===5?"g5":"g45")).join("")+
