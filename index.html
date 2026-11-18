@@ -638,7 +638,7 @@ if(csSel){
 const tabs=`<div class="qtog">${[["team","TEAM"],["agent","BY AGENT"],["trend","TREND"]].map(([k,l])=>`<button data-view="${k}"${csView===k?' class="on"':""}>${l}</button>`).join("")}</div>`;
 
 const SB=[5,4.5,4,3.5,3,2.5,2,1.5,1],FS=["RESOLVED","RESOLVED, MORE THAN 1","NOT RESOLVED, 1ST","NOT RESOLVED, REPEAT"];
-const chip=(n,key,cls)=>`<td class="v"><button class="chip ${cls}${csSel===key?" sel":""}" data-k="${key}">${n||"·"}</button></td><td class="v z">·</td>`;
+const chip=(n,key,cls)=>`<td class="v">${n?`<button class="chip ${cls}${csSel===key?" sel":""}" data-k="${key}">${n}</button>`:""}</td><td class="v z">·</td>`;
 const agentCard=()=>{
  let h=`<div class="card"><h3>SCORES PER AGENT</h3><div class="note" style="padding:0;text-align:left;margin:0 0 8px">CSAT = average of Knowledge and Courtesy per survey. Numbers are survey counts.</div><div class="hint">TAP A SCORE TO SEE ITS CATEGORIES</div><div class="scroll"><table class="cst agt"><thead><tr><th rowspan="2">NAME</th><th rowspan="2">SURVEYS</th><th class="grp2" colspan="9">CSAT</th><th class="grp2" colspan="4">FCR</th></tr><tr>${SB.map(s=>`<th>${s}</th>`).join("")}${FS.map(l=>`<th>${l}</th>`).join("")}</tr></thead><tbody>`;
  const rowFor=(id,nm)=>{const mine=out.filter(r=>r.ag===id);
