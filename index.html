@@ -59,11 +59,9 @@ tr.orange td{background:#f97316;color:#000}
 .lbgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;padding:14px 0}
 .lbgrid td:first-child{width:36px;text-align:center}
 #tsGrid td:first-child{white-space:nowrap}
-/* Background logo: put bg.png next to index.html. Change --bgop to make it fainter (lower) or stronger (higher). */
 :root{--bgop:.15}
 body::before,#picker::before,#lb::before,#ts::before,#csat::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:url("IMAGE/bg.png") center/min(75vmin,640px) no-repeat;opacity:var(--bgop)}
 .switch.left{left:20px;right:auto}
-/* Attention shake for the SWITCH CSAT VIEW buttons: shakes on load, then every 1.5s */
 @keyframes shake{0%{transform:translateX(0)}4%{transform:translateX(-6px)}8%{transform:translateX(6px)}12%{transform:translateX(-6px)}16%{transform:translateX(6px)}20%{transform:translateX(-3px)}24%{transform:translateX(3px)}28%,100%{transform:translateX(0)}}
 #toCsat,#toCsat2{animation:shake 1.5s ease-in-out infinite}
 #toCsat:hover,#toCsat2:hover{animation:none}
@@ -90,7 +88,6 @@ body::before,#picker::before,#lb::before,#ts::before,#csat::before{content:"";po
 #pwErr{min-height:20px;font-size:13px;color:#ff6b6b;font-weight:700}
 .pwbtns{display:flex;justify-content:flex-end;margin-top:8px}
 @media(max-width:560px){.switch{position:static;margin-bottom:10px}}
-/* SEE DIFFICULTIES view */
 .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
 .qtog{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 .qtog button{font:inherit;font-weight:800;font-size:12px;letter-spacing:.12em;color:var(--text);background:transparent;border:1px solid var(--edge);border-radius:10px;padding:9px 16px;cursor:pointer}
@@ -117,7 +114,7 @@ body::before,#picker::before,#lb::before,#ts::before,#csat::before{content:"";po
 .cst.agt{min-width:1000px}
 .cst.agt th{min-width:46px;font-size:11px;letter-spacing:.06em}
 .cst.agt thead tr:first-child th:first-child{min-width:190px;text-align:left}
-.cst.agt thead tr:nth-child(2) th:first-child{min-width:46px;text-align:center}   /* the "1" column is first-child of the 2nd header row */
+.cst.agt thead tr:nth-child(2) th:first-child{min-width:46px;text-align:center}
 .cst.agt td:first-child{text-align:left;font-weight:700}
 .cst.agt .glabel td{background:transparent;color:var(--muted);font-size:12px;letter-spacing:.2em;font-weight:700;padding:14px 0 2px;border-radius:0}
 .cst.agt th.grp2{border-bottom:1px solid var(--soft);padding-bottom:4px}
@@ -128,6 +125,16 @@ body::before,#picker::before,#lb::before,#ts::before,#csat::before{content:"";po
 .chip:hover{transform:translateY(-2px);border-color:#fff}
 .chip.sel{border-color:#fff;box-shadow:0 0 0 2px #fff}
 .cst td.z{color:var(--soft)}
+/* Performance Chart (TREND) */
+.trend-wrap{display:flex;flex-direction:column;gap:28px;padding:14px 0 40px}
+.chart-card{background:var(--card);border:1px solid var(--edge);border-radius:20px;padding:18px 18px 22px}
+.chart-card h3{margin:0 0 4px;font-size:15px;letter-spacing:.15em;color:var(--muted)}
+.chart-sub{font-size:12px;color:var(--muted);margin-bottom:12px}
+.chart-box{position:relative;width:100%;height:380px}
+.chart-box canvas{width:100%;height:100%;display:block;cursor:crosshair}
+.chart-empty{color:var(--muted);font-size:14px;padding:40px 0;text-align:center}
+.chart-tip{position:absolute;pointer-events:none;background:#111;border:1px solid var(--edge);color:var(--text);font-size:13px;font-weight:700;padding:8px 12px;border-radius:10px;white-space:nowrap;z-index:5;opacity:0;transition:opacity .12s;box-shadow:0 6px 20px rgba(0,0,0,.45)}
+.chart-tip.on{opacity:1}
 </style></head><body>
 <header>
 <button class="switch left" id="toCsat">SEE DIFFICULTIES</button>
@@ -188,20 +195,15 @@ body::before,#picker::before,#lb::before,#ts::before,#csat::before{content:"";po
 
 <script>
 /* ================= CONFIG: edit values here ================= */
-// Password is stored as a hash, not plain text. To change it, run in the browser console:
-// hash("YourNewPassword") and paste the number below. (Still client-side only: it gates the UI, not the data.)
 const PW_HASH=1692183746526809;
 const hash=(s,seed=0)=>{let h1=0xdeadbeef^seed,h2=0x41c6ce57^seed;for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}
 h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return 4294967296*(2097151&h2)+(h1>>>0)};
 const CFG={
  takeTarget:.36, vrrRed:.92, passRateTarget:.6, fcrPassTarget:.88, acqTarget:5.85, csatTarget:4.9, p2pTarget:.85, fcrTarget:.85, ahtTarget:920, xferSurveyRed:.55, transferMax:.12,
  defaultDays:{w:22,s:22,a:0,l:0},
- // Incentive: bookings threshold -> payout
  incentive:[[500,1750],[1000,3250],[2000,4750],[3000,5000],[3500,5100],[4000,5250],[4500,5750],[5000,6250],[5500,6500],[6000,7000],[6500,7500],[7000,8000]],
  kicker:{start:7000,rate:.035,fx:60.59},
- // KPI payout bands: minimum percentage -> amount (highest first)
  kpiBands:[[.95,5250],[.9,5000],[.87,4500],[.85,2500],[.8,1975]],
- // KPI weights
  weights:{csat:.2,aht:.25,vrr:.25,p2p:.15,transfer:.05,absence:.05,late:.05}
 };
 /* ============================================================ */
@@ -223,10 +225,9 @@ const D=()=>effDays(cur.id);
 const setDay=(k,v)=>{const e=effDays(cur.id);e[k]=v;e.t=Date.now();daysAll[cur.id]=e};
 const colIdx=n=>(data[0]||[]).findIndex(h=>norm(h)===norm(n));
 const getRow=(a=cur)=>{const i=colIdx("Agent Name");return i<0||!a?null:data.slice(1).find(r=>norm(r[i])===norm(a.name))};
-// Percent fields: "93%" or 93 -> 0.93; a bare value of 1 or less is treated as already a fraction (1 = 100%).
 function num(n,a=cur){const r=getRow(a),i=colIdx(n);if(!r||i<0)return NaN;const s=String(r[i]==null?"":r[i]).trim();if(!s)return NaN;let v=parseFloat(s.replace(/[$,%\s]/g,""));if(isNaN(v))return NaN;if(PCT.includes(norm(n))&&(s.includes("%")||v>1))v/=100;return v}
 const ok=v=>!isNaN(v);
-const P=v=>ok(v)?(v*100).toFixed(2)+"%":"—";   // every percentage shows 2 decimals
+const P=v=>ok(v)?(v*100).toFixed(2)+"%":"—";
 const N=(v,d=0)=>ok(v)?v.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d}):"—";
 const $=v=>ok(v)?"$"+N(v,2):"—";
 const tier=(v,list,dir,last)=>{if(!ok(v))return NaN;for(const[t,s]of list){if(dir>0?v>=t:v<=t)return s}return last};
@@ -235,7 +236,6 @@ aht:v=>tier(v,[[920,1],[930,.9],[939,.8],[949,.7],[959,.6]],-1,.5),
 csat:v=>tier(v,[[4.96,1.1],[4.93,1],[4.89,.9],[4.85,.8]],1,.5),
 trf:v=>tier(v,[[.12,1.1],[.129,1],[.139,.9],[.145,.8],[.149,.7]],-1,.5),
 pay:v=>tier(v,[[.87,1.1],[.83,1],[.8,.9],[.77,.8],[.75,.7],[.73,.6]],1,.5)};
-// VRR tiers by tenure group; every boundary is inclusive (>=)
 const vrrScore=(v,k)=>{if(!ok(v))return NaN;
 if(k==="t")return v>=.97?1.1:v>=.94?1:v>=.92?.9:v>=.9?.8:v>=.871?.7:.5;
 if(k==="m")return v>=.93?1.1:v>=.9?1:v>=.88?.9:v>=.85?.8:v>=.82?.7:.5;
@@ -244,13 +244,13 @@ const vrrC=(v,a)=>!ok(v)?"":v<a.red?"miss":v<a.org?"orange":"";
 const pcC=v=>!ok(v)?"":v<CFG.acqTarget?"miss":v<CFG.acqTarget+.5?"orange":"";
 const below=(v,t)=>ok(v)&&v<t?"miss":"";
 const above=(v,t)=>ok(v)&&v>t?"miss":"";
-const p2pC=v=>ok(v)&&v<CFG.p2pTarget?"miss":"";   // P2P: red only when below 85%
+const p2pC=v=>ok(v)&&v<CFG.p2pTarget?"miss":"";
 const xfC=v=>ok(v)&&v<CFG.xferSurveyRed?"red":"";
 const row3=(a,b,c,m)=>`<tr${m?' class="'+m+'"':''}><td>${a}</td><td class="v">${b}</td>${c===undefined?"":`<td class="v">${c}</td>`}</tr>`;
 const badge=q=>q===null?"—":`<span class="${q?"yes":"no"}">${q?"YES":"NO"}</span>`;
 const kpiAmt=p=>{for(const[t,a]of CFG.kpiBands)if(p>=t)return a;return 0};
 
-const raw={};   // text typed in a day field, kept while it is being edited so "21." and empty fields survive a redraw
+const raw={};
 function render(){
 if(!cur)return;
 const days=D();
@@ -271,19 +271,19 @@ const W=CFG.weights;
 const s=[sc.aht(aht),sc.csat(csat),vrrScore(res,cur.key),sc.trf(xfer),sc.pay(pay)];
 const abn=n=>n===0?1:n===1?.75:n===2?.5:0;
 const pcnt=s.every(ok)?s[1]*W.csat+s[0]*W.aht+s[2]*W.vrr+s[4]*W.p2p+s[3]*W.transfer+abn(days.a)*W.absence+abn(days.l)*W.late:NaN;
-const mult=days.s?Math.min(1,days.w/days.s):NaN;   // capped at 100%
+const mult=days.s?Math.min(1,days.w/days.s):NaN;
 const sp=v=>ok(v)?(v*100).toFixed(2)+"%":"—";
 const ab=n=>sp(abn(n));
 const pr=Math.round(pcnt*1e6)/1e6;
 const initial=ok(pr)?kpiAmt(pr):NaN;
-const q2=ok(pr)?initial>0:null;   // KPI qualified = reaches the lowest payout band
+const q2=ok(pr)?initial>0:null;
 const ro=unlocked?"":" readonly";
 const inp=(id,v)=>`<input class="edit" type="text" inputmode="decimal" id="${id}" value="${raw[id]!==undefined?raw[id]:v}"${ro}>`;
 $id("kpi").innerHTML="<thead><tr><th>METRIC</th><th style='text-align:right'>ACTUAL</th><th style='text-align:right'>SCORE</th></tr></thead><tbody>"+
 `<tr><td>Days Worked</td><td class="v" colspan="2">${inp("dw",days.w)}</td></tr>`+
 `<tr><td>Days Scheduled</td><td class="v" colspan="2">${inp("ds",days.s)}</td></tr>`+
 row3("AHT",N(aht),sp(s[0]),above(aht,CFG.ahtTarget))+row3("CSAT",N(csat,2),sp(s[1]),below(csat,CFG.csatTarget))+row3("VRR",P(res),sp(s[2]),vrrC(res,cur))+row3("TRANSFER%",P(xfer),sp(s[3]),above(xfer,CFG.transferMax))+row3("P2P",P(pay),sp(s[4]),p2pC(pay))+
-`<tr><td>ABSENCE</td><td class="v">${inp("da",days.a)}</td><td class="v">${ab(days.a)}</td></tr>`+`<tr><td>LATE</td><td class="v">${inp("dl",days.l)}</td><td class="v">${ab(days.l)}</td></tr>`+
+`<tr><td>ABSENCE</td><td class="v">${inp("da",days.a)}</td><td class="v">${ab(days.a)}</td></tr><tr><td>LATE</td><td class="v">${inp("dl",days.l)}</td><td class="v">${ab(days.l)}</td></tr>`+
 row3("MULTIPLIER","",sp(mult))+row3("PERCENTAGE","",sp(pcnt))+row3("INITIAL KPI","",$(initial))+row3("FINAL KPI","",$(ok(initial)&&ok(mult)?mult*initial:NaN))+row3("QUALIFIED?","",badge(q2))+"</tbody>";
 const bind=(id,key,conv)=>{const el=$id(id);
  el.onclick=()=>{if(!unlocked)askPw(render)};
@@ -325,17 +325,16 @@ $id("switch").onclick=()=>{location.hash=""};
 function renderLB(){
 const rows=AGENTS.map(a=>{const g=k=>num(k,a);const ans=g("Voice Answered"),acq=g("Revenue - ACQ + CROSS (Post Recoup)");
 return{a,aht:g("Voice Answered AHT"),csat:g("Voice CSAT"),res:g("Voice Agent Resolution"),fcr:g("Voice FCR"),take:g("Voice Answered Take Rate (calibrated)"),trf:g("Voice Answered Transfer to Survey % (calibrated)"),xf:g("Voice Handled Transfer % (calibrated)"),pay:g("Status - Pay to Performance"),pc:ok(acq)&&ok(ans)&&ans?acq/ans:NaN}});
-// [title, field, formatter, colour rule, order: 1 = highest first, -1 = lowest first]
 const MTD=[["AHT","aht",v=>N(v),v=>above(v,CFG.ahtTarget),-1],["CSAT","csat",v=>N(v,2),v=>below(v,CFG.csatTarget),1],["VRR","res",P,(v,r)=>vrrC(v,r.a),1],["FCR","fcr",P,v=>below(v,CFG.fcrTarget),1],["TAKE RATE","take",P,v=>below(v,CFG.takeTarget),1],["XFER TO SURVEY","trf",P,v=>xfC(v),1],["TRANSFERS%","xf",P,v=>above(v,CFG.transferMax),-1],["P2P","pay",P,v=>p2pC(v),1]];
 const SALES=[["$/CALL","pc",$,pcC,1]];
 const card=([t,k,f,c,dir])=>{
 const list=rows.filter(r=>ok(r[k])).sort((x,y)=>dir*(y[k]-x[k]));
-const body=list.length?list.map((r,i)=>{const m=c(r[k],r);return`<tr${m?' class="'+m+'"':''}><td>${i+1}</td><td>${r.a.name}<span class="tg">${r.a.tag}</span></td><td class="v">${f(r[k])}</td></tr>`}).join(""):'<tr><td colspan="3">No data yet</td></tr>';
-return`<div class="card"><h3>${t}</h3><table><tbody>${body}</tbody></table></div>`};
+const body=list.length?list.map((r,i)=>{const m=c(r[k],r);return `<tr${m?' class="'+m+'"':''}><td>${i+1}</td><td>${r.a.name}<span class="tg">${r.a.tag}</span></td><td class="v">${f(r[k])}</td></tr>`}).join(""):'<tr><td colspan="3">No data yet</td></tr>';
+return `<div class="card"><h3>${t}</h3><table><tbody>${body}</tbody></table></div>`};
 $id("lbGrid").innerHTML='<div class="lbsec">MTD METRICS</div>'+MTD.map(card).join("")+'<div class="lbsec">SALES</div>'+SALES.map(card).join("");
 }
 
-/* ---------- Team scores (the "Grand Total" row of the sheet) ---------- */
+/* ---------- Team scores ---------- */
 function renderTS(){
 const a={name:"Total"};
 if(!getRow(a)){$id("tsNote").textContent='No "Total" row found in the data yet. Paste the sheet with a row whose Agent Name is Total.';$id("tsGrid").innerHTML="";return}
@@ -343,7 +342,6 @@ $id("tsNote").textContent="";
 const g=k=>num(k,a);
 const ans=g("Voice Answered"),aht=g("Voice Answered AHT"),csat=g("Voice CSAT"),res=g("Voice Agent Resolution"),fcr=g("Voice FCR"),take=g("Voice Answered Take Rate (calibrated)"),trf=g("Voice Answered Transfer to Survey % (calibrated)"),xfer=g("Voice Handled Transfer % (calibrated)"),pay=g("Status - Pay to Performance"),acq=g("Revenue - ACQ + CROSS (Post Recoup)"),ren=g("Revenue - REN (Post Recoup)");
 const tot=ok(acq)&&ok(ren)?acq+ren:NaN,pc=ok(acq)&&ok(ans)&&ans?acq/ans:NaN;
-// Passing rate = agents at or above the $/call target / agents with $/call data
 let passed=0,counted=0;
 AGENTS.forEach(x=>{const an=num("Voice Answered",x),aq=num("Revenue - ACQ + CROSS (Post Recoup)",x);if(ok(an)&&ok(aq)&&an){counted++;if(aq/an>=CFG.acqTarget)passed++}});
 const rate=counted?passed/counted:NaN;
@@ -354,7 +352,7 @@ row3("ACQ",$(acq))+row3("RENEWAL",$(ren))+row3("TOTAL",$(tot))+row3("$/CALL",$(p
 $id("tsGrid").innerHTML=`<div class="card"><h3>MTD TABLE</h3><table>${mtd}</table></div><div class="card"><h3>SALES TABLE</h3><table>${sales}</table></div>`;
 }
 
-/* ---------- SEE DIFFICULTIES view (paste raw survey data; no password) ---------- */
+/* ---------- SEE DIFFICULTIES view ---------- */
 function parseTSV(t){const rows=[];let row=[],f="",q=false;t=t.replace(/\r/g,"");
 for(let i=0;i<t.length;i++){const ch=t[i];
  if(q){if(ch==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=ch}
@@ -368,45 +366,256 @@ const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
 const FCR_LABELS=["Yes. resolved in one interaction","Yes. but it took more than one interaction.","No. this is my first interaction and it is not resolved.","No. I have contacted you more than once and it is still not resolved."];
 const FCRN=FCR_LABELS.map(norm);
 let cs={rows:[]},csLocalTs=0,csSel=null,csView="team";
-const AG_ALIAS={carlalanada:"carlalynnlanada",jaycabiles:"jadecabiles"};   // survey spellings that differ from the roster
+const AG_ALIAS={carlalanada:"carlalynnlanada",jaycabiles:"jadecabiles"};
 const agKey=s=>{const n=norm(s);return AG_ALIAS[n]||n};
 try{const d=JSON.parse(localStorage.getItem("ps_diff")||"null");if(d){cs.rows=d.rows||[];csLocalTs=+d.ts||0}}catch(e){}
 const csSave=()=>{csLocalTs=Date.now();try{localStorage.setItem("ps_diff",JSON.stringify({rows:cs.rows,ts:csLocalTs}))}catch(e){}};
 $id("toCsat").onclick=$id("toCsat2").onclick=()=>{location.hash="csat"};
 $id("csBack").onclick=()=>{location.hash=""};
 
-// Finds each needed column by header name (exact aliases first, then a partial match)
-function csCols(){const h=(cs.rows[0]||[]).map(norm);
-const f=(ex,part)=>{let i=-1;for(const k of ex){i=h.indexOf(k);if(i>=0)return i}if(part)i=h.findIndex(x=>x.includes(part));return i};
-return{agent:f(["agentname","agent"],"agentname"),pega:f(["pegacase","pegacaseid","pegacasenumber","pegaid","caseid","case"],"pegacase"),
- k:f(["q1knowledge","knowledgeablerating","knowledgeable"],"knowledg"),
- c:f(["q2courtesy","courteousrating","courteous"],"courte"),
- fcr:f(["q3fcr","fcrvalue","fcr"],"fcr"),
- cat:f(["pegacategory","category","casecategory"]),
- sub:f(["pegasubcategory","subcategory","subcat","casesubcategory"])}}
-function csRecs(){const C=csCols(),out=[];
-for(let r=1;r<cs.rows.length;r++){const row=cs.rows[r]||[];if(!row.some(x=>String(x||"").trim()))continue;
- const sc=i=>{const v=Math.round(parseFloat(row[i]));return v>=1&&v<=5?v:0};
- out.push({id:C.pega>=0&&norm(row[C.pega])?norm(row[C.pega]):"r"+r,
-  k:C.k>=0?sc(C.k):0,c:C.c>=0?sc(C.c):0,
-  a:0,ag:C.agent>=0?agKey(row[C.agent]):"",agn:C.agent>=0?String(row[C.agent]||"").trim():"",
-  f:C.fcr>=0?FCRN.indexOf(norm(row[C.fcr])):-1,
-  cat:(C.cat>=0&&String(row[C.cat]||"").trim())||"(blank)",
-  sub:(C.sub>=0&&String(row[C.sub]||"").trim())||"(blank)"})}
-out.forEach(r=>{r.a=r.k&&r.c?(r.k+r.c)/2:r.k||r.c||0});   // CSAT of one survey = average of the Knowledge and Courtesy scores it has (one score alone counts as is)
-return{C,out}}
+function csCols(){
+  const h=(cs.rows[0]||[]).map(norm);
+  const f=(ex,part)=>{
+    let i=-1;
+    for(const k of ex){i=h.indexOf(k);if(i>=0)return i}
+    if(part)i=h.findIndex(x=>x.includes(part));
+    return i;
+  };
+  return{
+    agent:f(["agentname","agent"],"agentname"),
+    pega:f(["pegacase","pegacaseid","pegacasenumber","pegaid","caseid","case"],"pegacase"),
+    k:f(["q1knowledge","knowledgeablerating","knowledgeable","q1knowledge"],"knowledg"),
+    c:f(["q2courtesy","courteousrating","courteous","q2courtesy"],"courte"),
+    fcr:f(["q3fcr","fcrvalue","fcr","q3fcr"],"fcr"),
+    cat:f(["pegacategory","category","casecategory"]),
+    sub:f(["pegasubcategory","subcategory","subcat","casesubcategory"]),
+    date:f(["date","surveydate","responsedate","createddate","submitted"],"date")
+  };
+}
+
+function csRecs(){
+  const C=csCols(),out=[];
+  for(let r=1;r<cs.rows.length;r++){
+    const row=cs.rows[r]||[];
+    if(!row.some(x=>String(x||"").trim()))continue;
+    const sc=i=>{const v=Math.round(parseFloat(row[i]));return v>=1&&v<=5?v:0};
+    let d="";
+    if(C.date>=0){
+      const raw=String(row[C.date]||"").trim();
+      const m=raw.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      if(m){
+        const mm=m[1].padStart(2,"0"),dd=m[2].padStart(2,"0");
+        d=`${m[3]}-${mm}-${dd}`;
+      }
+    }
+    out.push({
+      id:C.pega>=0&&norm(row[C.pega])?norm(row[C.pega]):"r"+r,
+      k:C.k>=0?sc(C.k):0,
+      c:C.c>=0?sc(C.c):0,
+      a:0,
+      ag:C.agent>=0?agKey(row[C.agent]):"",
+      agn:C.agent>=0?String(row[C.agent]||"").trim():"",
+      f:C.fcr>=0?FCRN.indexOf(norm(row[C.fcr])):-1,
+      cat:(C.cat>=0&&String(row[C.cat]||"").trim())||"(blank)",
+      sub:(C.sub>=0&&String(row[C.sub]||"").trim())||"(blank)",
+      date:d
+    });
+  }
+  out.forEach(r=>{r.a=r.k&&r.c?(r.k+r.c)/2:r.k||r.c||0});
+  return{C,out};
+}
+
+function csDaily(out){
+  const map={};
+  out.forEach(r=>{
+    if(!r.date||!r.a)return;
+    if(!map[r.date])map[r.date]={sum:0,n:0,fcrOk:0,fcrN:0};
+    map[r.date].sum+=r.a;
+    map[r.date].n++;
+    if(r.f>=0){
+      map[r.date].fcrN++;
+      if(r.f===0)map[r.date].fcrOk++;
+    }
+  });
+  return Object.keys(map).sort().map(d=>{
+    const o=map[d];
+    return{
+      date:d,
+      label:d.slice(5).replace("-","/"),
+      csat:o.n?+(o.sum/o.n).toFixed(2):null,
+      fcr:o.fcrN?+(o.fcrOk/o.fcrN*100).toFixed(1):null,
+      n:o.n
+    };
+  });
+}
+
+function drawLineChart(canvas,points,opts){
+  const parent=canvas.parentElement;
+  // remove old tip if any
+  const oldTip=parent.querySelector(".chart-tip");
+  if(oldTip)oldTip.remove();
+
+  const tip=document.createElement("div");
+  tip.className="chart-tip";
+  parent.appendChild(tip);
+
+  const ctx=canvas.getContext("2d");
+  const dpr=devicePixelRatio||1;
+  const w=canvas.offsetWidth,h=canvas.offsetHeight;
+  canvas.width=w*dpr;
+  canvas.height=h*dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);
+
+  if(!points.length){
+    ctx.fillStyle="#a3a3a3";
+    ctx.font="14px system-ui";
+    ctx.textAlign="center";
+    ctx.fillText("No dated surveys yet",w/2,h/2);
+    return;
+  }
+
+  const pad={t:28,r:20,b:42,l:48};
+  const chartW=w-pad.l-pad.r,chartH=h-pad.t-pad.b;
+  const vals=points.map(p=>p.v).filter(v=>v!=null);
+  let minY=opts.minY!=null?opts.minY:Math.min(...vals);
+  let maxY=opts.maxY!=null?opts.maxY:Math.max(...vals);
+  if(minY===maxY){minY-=1;maxY+=1}
+
+  const xAt=i=>pad.l+(i/(points.length-1||1))*chartW;
+  const yAt=v=>pad.t+chartH-((v-minY)/(maxY-minY))*chartH;
+
+  // store hit areas for hover
+  const hits=[];
+
+  function paint(activeIdx){
+    ctx.clearRect(0,0,w,h);
+
+    // grid
+    ctx.strokeStyle="rgba(255,255,255,.08)";
+    ctx.lineWidth=1;
+    for(let i=0;i<=4;i++){
+      const gy=pad.t+(i/4)*chartH;
+      ctx.beginPath();ctx.moveTo(pad.l,gy);ctx.lineTo(pad.l+chartW,gy);ctx.stroke();
+    }
+
+    // target line
+    if(opts.target!=null){
+      const ty=yAt(opts.target);
+      ctx.strokeStyle="rgba(255,255,255,.28)";
+      ctx.setLineDash([6,4]);
+      ctx.beginPath();ctx.moveTo(pad.l,ty);ctx.lineTo(pad.l+chartW,ty);ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle="rgba(255,255,255,.5)";
+      ctx.font="11px system-ui";
+      ctx.textAlign="left";
+      ctx.fillText("target "+opts.target,pad.l+6,ty-6);
+    }
+
+    // line
+    ctx.strokeStyle=opts.color||"#22c55e";
+    ctx.lineWidth=2.5;
+    ctx.lineJoin="round";
+    ctx.beginPath();
+    let started=false;
+    points.forEach((p,i)=>{
+      if(p.v==null)return;
+      const px=xAt(i),py=yAt(p.v);
+      if(!started){ctx.moveTo(px,py);started=true}else ctx.lineTo(px,py);
+    });
+    ctx.stroke();
+
+    // points
+    hits.length=0;
+    points.forEach((p,i)=>{
+      if(p.v==null)return;
+      const px=xAt(i),py=yAt(p.v);
+      hits.push({i,px,py,p});
+      const r=activeIdx===i?7:4.5;
+      ctx.beginPath();
+      ctx.arc(px,py,r,0,Math.PI*2);
+      ctx.fillStyle=opts.color||"#22c55e";
+      ctx.fill();
+      ctx.strokeStyle="#000";
+      ctx.lineWidth=1.5;
+      ctx.stroke();
+      // outer ring when active
+      if(activeIdx===i){
+        ctx.beginPath();
+        ctx.arc(px,py,r+4,0,Math.PI*2);
+        ctx.strokeStyle="rgba(255,255,255,.55)";
+        ctx.lineWidth=2;
+        ctx.stroke();
+      }
+    });
+
+    // Y labels
+    ctx.fillStyle="#a3a3a3";
+    ctx.font="11px system-ui";
+    ctx.textAlign="right";
+    for(let i=0;i<=4;i++){
+      const val=minY+(maxY-minY)*(1-i/4);
+      ctx.fillText(opts.isPct?val.toFixed(0)+"%":val.toFixed(1),pad.l-8,pad.t+(i/4)*chartH+4);
+    }
+
+    // X labels
+    ctx.textAlign="center";
+    const step=Math.max(1,Math.ceil(points.length/8));
+    points.forEach((p,i)=>{
+      if(i%step===0||i===points.length-1){
+        ctx.fillText(p.label,xAt(i),h-12);
+      }
+    });
+  }
+
+  paint(-1);
+
+  // hover interaction
+  canvas.onmousemove=e=>{
+    const rect=canvas.getBoundingClientRect();
+    const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+    let found=-1,best=18;
+    hits.forEach(h=>{
+      const d=Math.hypot(h.px-mx,h.py-my);
+      if(d<best){best=d;found=h.i}
+    });
+    if(found>=0){
+      const h=hits.find(x=>x.i===found);
+      paint(found);
+      const valTxt=opts.isPct?h.p.v.toFixed(1)+"%":h.p.v.toFixed(2);
+      const nTxt=h.p.n!=null?` · ${h.p.n} survey${h.p.n===1?"":"s"}`:"";
+      tip.innerHTML=`${h.p.label}<br>${valTxt}${nTxt}`;
+      tip.classList.add("on");
+      // position tip near the point, keep inside chart
+      let left=h.px+12,top=h.py-40;
+      if(left+120>w)left=h.px-130;
+      if(top<4)top=h.py+16;
+      tip.style.left=left+"px";
+      tip.style.top=top+"px";
+    }else{
+      paint(-1);
+      tip.classList.remove("on");
+    }
+  };
+  canvas.onmouseleave=()=>{
+    paint(-1);
+    tip.classList.remove("on");
+  };
+}
 
 function csRender(){
 const{C,out:all}=csRecs();
 const out=all.filter(r=>r.a),noAvg=all.length-out.length;
-const rosterIds=new Set(AGENTS.map(a=>a.id)),unl=out.filter(r=>r.ag&&!rosterIds.has(r.ag)).length;   // a row with neither score is not a survey and is skipped
+const rosterIds=new Set(AGENTS.map(a=>a.id)),unl=out.filter(r=>r.ag&&!rosterIds.has(r.ag)).length;
 const miss=[...(csView==="agent"?[["Agent Name",C.agent]]:[]),["Knowledgeable rating",C.k],["Courteous rating",C.c],["FCR value",C.fcr],["Category",C.cat],["Sub category",C.sub],["Pega case",C.pega]].filter(x=>x[1]<0).map(x=>x[0]);
 $id("csNote").textContent=cs.rows.length<=1?"No data yet. Tap the book button and paste the sheet at A1 (headers in row 1).":miss.length?"Columns not found: "+miss.join(", ")+". Check the header names in row 1.":noAvg?noAvg+" row(s) skipped: no Knowledge or Courtesy score.":(csView==="agent"&&unl?unl+" survey(s) are from agents not on the roster; they are listed under OTHER AGENTS.":"");
+
 const csatBars=[5,4.5,4,3.5,3,2.5,2,1.5,1].map(s=>({key:"s"+s,label:String(s),sc:1,bad:s<=4,cls:s===5?"g5":s===4.5?"g45":"",n:out.filter(r=>r.a===s).length}));
 const fcrBars=[0,1,2,3].map(i=>({key:"f"+i,label:FCR_LABELS[i],bad:i>=2,cls:i===0?"g5":i===1?"g45":"",n:out.filter(r=>r.f===i).length}));
 const chart=(bars,title,sub)=>{const mx=Math.max(1,...bars.map(b=>b.n));
- return`<div class="card"><h3>${title}</h3><div class="note" style="padding:0;text-align:left;margin:0 0 8px">${sub}</div><div class="hint">TAP A BAR TO SEE ITS CATEGORIES</div><div class="bars">`+
+ return `<div class="card"><h3>${title}</h3><div class="note" style="padding:0;text-align:left;margin:0 0 8px">${sub}</div><div class="hint">TAP A BAR TO SEE ITS CATEGORIES</div><div class="bars">`+
  bars.map(b=>`<button class="bar2${b.bad?" bad":""}${b.cls?" "+b.cls:""}${b.sc?" sc":""}${csSel===b.key?" sel":""}" data-k="${b.key}" title="Tap to see categories and sub categories"><span class="bn">${b.n}</span><span class="bf" style="height:${Math.round(b.n/mx*170)}px"></span><span class="bl">${esc(b.label)}</span></button>`).join("")+"</div></div>"};
+
 let drill='<div class="card dr" id="drill"><div class="empty">'+(csView==="agent"?"Tap a score":"Tap a bar")+' to see the categories and sub categories behind it.</div></div>';
 if(csSel){
  let ag=null,key=csSel;
@@ -423,10 +632,13 @@ if(csSel){
  Object.entries(cats).sort((a,b)=>b[1].all.size-a[1].all.size).forEach(([c,o])=>{
   h+=`<tr class="catrow"><td>${esc(c)}</td><td class="v">${o.all.size}</td><td class="v">${pct(o.all.size)}</td></tr>`;
   Object.entries(o.subs).sort((a,b)=>b[1].size-a[1].size).forEach(([s,set])=>{h+=`<tr class="subrow"><td>${esc(s)}</td><td class="v">${set.size}</td><td class="v">${pct(set.size)}</td></tr>`})});
- drill=`<div class="card dr" id="drill"><h3>${esc(title)} · ${total} PEGA CASES</h3>${total?h+"</tbody></table>":'<div class="empty">No cases.</div>'}</div>`}
-const tabs=`<div class="qtog">${[["team","TEAM"],["agent","BY AGENT"]].map(([k,l])=>`<button data-view="${k}"${csView===k?' class="on"':""}>${l}</button>`).join("")}</div>`;
+ drill=`<div class="card dr" id="drill"><h3>${esc(title)} · ${total} PEGA CASES</h3>${total?h+"</tbody></table>":'<div class="empty">No cases.</div>'}</div>`;
+}
+
+const tabs=`<div class="qtog">${[["team","TEAM"],["agent","BY AGENT"],["trend","TREND"]].map(([k,l])=>`<button data-view="${k}"${csView===k?' class="on"':""}>${l}</button>`).join("")}</div>`;
+
 const SB=[5,4.5,4,3.5,3,2.5,2,1.5,1],FS=["RESOLVED","RESOLVED, MORE THAN 1","NOT RESOLVED, 1ST","NOT RESOLVED, REPEAT"];
-const chip=(n,key,cls)=>n?`<td class="v"><button class="chip ${cls}${csSel===key?" sel":""}" data-k="${key}">${n}</button></td>`:`<td class="v z">·</td>`;
+const chip=(n,key,cls)=>`<td class="v"><button class="chip ${cls}${csSel===key?" sel":""}" data-k="${key}">${n||"·"}</button></td><td class="v z">·</td>`;
 const agentCard=()=>{
  let h=`<div class="card"><h3>SCORES PER AGENT</h3><div class="note" style="padding:0;text-align:left;margin:0 0 8px">CSAT = average of Knowledge and Courtesy per survey. Numbers are survey counts.</div><div class="hint">TAP A SCORE TO SEE ITS CATEGORIES</div><div class="scroll"><table class="cst agt"><thead><tr><th rowspan="2">NAME</th><th rowspan="2">SURVEYS</th><th class="grp2" colspan="9">CSAT</th><th class="grp2" colspan="4">FCR</th></tr><tr>${SB.map(s=>`<th>${s}</th>`).join("")}${FS.map(l=>`<th>${l}</th>`).join("")}</tr></thead><tbody>`;
  const rowFor=(id,nm)=>{const mine=out.filter(r=>r.ag===id);
@@ -439,19 +651,51 @@ const agentCard=()=>{
  const others=new Map();out.forEach(r=>{if(r.ag&&!rosterIds.has(r.ag)&&!others.has(r.ag))others.set(r.ag,r.agn||r.ag)});
  if(others.size){h+=`<tr class="glabel"><td colspan="15">OTHER AGENTS (NOT IN THE ROSTER)</td></tr>`;
   [...others.entries()].sort((a,b)=>a[1].localeCompare(b[1])).forEach(([id,nm])=>{h+=rowFor(id,nm)})}
- return h+"</tbody></table></div></div>"};
-$id("csTables").innerHTML=tabs+(csView==="agent"?agentCard():`<div class="two">`+
- chart(csatBars,"CSAT SCORES","Average of Knowledge and Courtesy per survey. Red = DSAT (4 and below), green = 4.5 and 5.")+
- chart(fcrBars,"FCR","Green = resolved. Red = still not resolved.")+
- `</div>`)+drill;
+ return h+"</tbody></table></div></div>";
+};
+
+// ---------- TREND view ----------
+if(csView==="trend"){
+  const daily=csDaily(out);
+  const csatPts=daily.map(d=>({label:d.label,v:d.csat,n:d.n}));
+  const fcrPts=daily.map(d=>({label:d.label,v:d.fcr,n:d.n}));
+
+  $id("csTables").innerHTML=tabs+`
+    <div class="trend-wrap">
+      <div class="chart-card">
+        <h3>DAILY CSAT</h3>
+        <div class="chart-sub">Average of Knowledge + Courtesy · Target 4.9 · Hover a point for the exact score</div>
+        <div class="chart-box"><canvas id="csatChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>DAILY FCR %</h3>
+        <div class="chart-sub">% resolved on first interaction · Hover a point for the exact rate</div>
+        <div class="chart-box"><canvas id="fcrChart"></canvas></div>
+      </div>
+    </div>`;
+
+  requestAnimationFrame(()=>{
+    const c1=$id("csatChart"),c2=$id("fcrChart");
+    if(c1)drawLineChart(c1,csatPts,{minY:1,maxY:5,target:4.9,color:"#22c55e"});
+    if(c2)drawLineChart(c2,fcrPts,{minY:0,maxY:100,isPct:true,color:"#60a5fa"});
+  });
+  return;
 }
+
+// ---------- TEAM / BY AGENT ----------
+$id("csTables").innerHTML=tabs+(csView==="agent"?agentCard():`<div class="two">`+
+  chart(csatBars,"CSAT SCORES","Average of Knowledge and Courtesy per survey. Red = DSAT (4 and below), green = 4.5 and 5.")+
+  chart(fcrBars,"FCR","Green = resolved. Red = still not resolved.")+
+`</div>`)+drill;
+}
+
 $id("csTables").addEventListener("click",e=>{
  const v=e.target.closest("button[data-view]");
  if(v){csView=v.dataset.view;csSel=null;csRender();return}
  const b=e.target.closest("button[data-k]");
  if(b){csSel=csSel===b.dataset.k?null:b.dataset.k;csRender();const d=$id("drill");if(d&&csSel)d.scrollIntoView({behavior:"smooth",block:"nearest"})}});
 
-/* Data sheet */
+/* Data sheet for survey */
 const CS_CAP=2000;
 function csGrid(){
 const arr=cs.rows,R=Math.min(arr.length+xRows,CS_CAP),C=Math.max(xCols,...arr.slice(0,CS_CAP).map(r=>r.length+1));
@@ -477,8 +721,6 @@ rows.forEach((cells,i)=>{while(arr.length<=r0+i)arr.push([]);cells.forEach((v,j)
 csSel=null;csSave();csGrid()});
 $id("csClear").onclick=()=>{if(!confirm("Clear the survey data for everyone's view once published?"))return;cs.rows=[];csSel=null;csSave();csGrid()};
 
-// Export: only the columns the view needs. Pega case IDs are replaced by anonymous numbers
-// (so distinct cases still count correctly), and nothing is exported if a column is missing.
 $id("csExport").onclick=()=>{
 const C=csCols();
 if([C.agent,C.k,C.c,C.fcr,C.cat,C.sub].some(i=>i<0)){alert("Some columns were not found, so nothing was exported. Fix the headers in row 1 first.");return}
@@ -514,7 +756,7 @@ $id("pwIn").addEventListener("keydown",e=>{if(e.key==="Enter")tryPw();if(e.key==
 $id("pwCancel").onclick=()=>{pwThen=null;$id("pwModal").classList.remove("on")};
 
 /* ---------- Data sheet ---------- */
-let xRows=30,xCols=40;   // blank rows / minimum columns shown in the sheets; the + buttons grow them
+let xRows=30,xCols=40;
 const colName=c=>{let s="";c++;while(c>0){const m=(c-1)%26;s=String.fromCharCode(65+m)+s;c=Math.floor((c-1)/26)}return s};
 function grid(){
 const R=data.length+xRows,C=Math.max(xCols,...data.map(r=>r.length+1));
@@ -553,7 +795,7 @@ alert("data.json downloaded.\n\nUpload it to your GitHub repo (same folder as in
 }
 $id("export").onclick=()=>unlocked?doExport():askPw(doExport);
 
-/* ---------- Published data (data.json next to index.html) ---------- */
+/* ---------- Published data ---------- */
 function loadPublished(){
 if(location.protocol==="file:")return;
 fetch("data.json?v="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{
