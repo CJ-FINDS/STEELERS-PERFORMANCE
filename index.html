@@ -402,10 +402,14 @@ function csRecs(){
     let d="";
     if(C.date>=0){
       const raw=String(row[C.date]||"").trim();
-      const m=raw.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      const m=raw.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/),iso=raw.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
       if(m){
-        const mm=m[1].padStart(2,"0"),dd=m[2].padStart(2,"0");
-        d=`${m[3]}-${mm}-${dd}`;
+        d=`${m[3]}-${m[1].padStart(2,"0")}-${m[2].padStart(2,"0")}`;
+      }else if(iso){
+        d=`${iso[1]}-${iso[2].padStart(2,"0")}-${iso[3].padStart(2,"0")}`;
+      }else if(raw){
+        const t=new Date(raw);
+        if(!isNaN(t))d=`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`;
       }
     }
     out.push({
@@ -607,7 +611,7 @@ function csRender(){
 const{C,out:all}=csRecs();
 const out=all.filter(r=>r.a),noAvg=all.length-out.length;
 const rosterIds=new Set(AGENTS.map(a=>a.id)),unl=out.filter(r=>r.ag&&!rosterIds.has(r.ag)).length;
-const miss=[...(csView==="agent"?[["Agent Name",C.agent]]:[]),["Knowledgeable rating",C.k],["Courteous rating",C.c],["FCR value",C.fcr],["Category",C.cat],["Sub category",C.sub],["Pega case",C.pega]].filter(x=>x[1]<0).map(x=>x[0]);
+const miss=[...(csView==="agent"?[["Agent Name",C.agent]]:[]),...(csView==="trend"?[["Date",C.date]]:[]),["Knowledgeable rating",C.k],["Courteous rating",C.c],["FCR value",C.fcr],["Category",C.cat],["Sub category",C.sub],["Pega case",C.pega]].filter(x=>x[1]<0).map(x=>x[0]);
 $id("csNote").textContent=cs.rows.length<=1?"No data yet. Tap the book button and paste the sheet at A1 (headers in row 1).":miss.length?"Columns not found: "+miss.join(", ")+". Check the header names in row 1.":noAvg?noAvg+" row(s) skipped: no Knowledge or Courtesy score.":(csView==="agent"&&unl?unl+" survey(s) are from agents not on the roster; they are listed under OTHER AGENTS.":"");
 
 const csatBars=[5,4.5,4,3.5,3,2.5,2,1.5,1].map(s=>({key:"s"+s,label:String(s),sc:1,bad:s<=4,cls:s===5?"g5":s===4.5?"g45":"",n:out.filter(r=>r.a===s).length}));
@@ -722,12 +726,8 @@ csSel=null;csSave();csGrid()});
 $id("csClear").onclick=()=>{if(!confirm("Clear the survey data for everyone's view once published?"))return;cs.rows=[];csSel=null;csSave();csGrid()};
 
 $id("csExport").onclick=()=>{
-const C=csCols();
-if([C.agent,C.k,C.c,C.fcr,C.cat,C.sub].some(i=>i<0)){alert("Some columns were not found, so nothing was exported. Fix the headers in row 1 first.");return}
-const ids=new Map(),out=[["Case","Agent Name","Knowledgeable Rating","Courteous Rating","FCR Value","Category","Sub Category"]];
-for(let r=1;r<cs.rows.length;r++){const w=cs.rows[r]||[];if(!w.some(x=>String(x||"").trim()))continue;
- const p=C.pega>=0?norm(w[C.pega]):"";let id="r"+r;if(p){if(!ids.has(p))ids.set(p,"c"+ids.size);id=ids.get(p)}
- out.push([id,w[C.agent]||"",w[C.k]||"",w[C.c]||"",w[C.fcr]||"",w[C.cat]||"",w[C.sub]||""])}
+const out=cs.rows.filter(w=>w&&w.some(x=>String(x==null?"":x).trim())).map(w=>Array.from(w,x=>x==null?"":String(x)));
+if(out.length<2){alert("There is no survey data to export. Paste the sheet at A1 first.");return}
 const blob=new Blob([JSON.stringify({updated:Date.now(),rows:out})],{type:"application/json"});
 const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="difficulties.json";document.body.appendChild(a);a.click();a.remove();
 setTimeout(()=>URL.revokeObjectURL(a.href),1000);
