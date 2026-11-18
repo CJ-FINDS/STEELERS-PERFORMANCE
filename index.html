@@ -407,6 +407,9 @@ function csRecs(){
         d=`${m[3]}-${m[1].padStart(2,"0")}-${m[2].padStart(2,"0")}`;
       }else if(iso){
         d=`${iso[1]}-${iso[2].padStart(2,"0")}-${iso[3].padStart(2,"0")}`;
+      }else if(/^\d{5}(\.\d+)?$/.test(raw)){
+        const t=new Date(Math.round((parseFloat(raw)-25569)*86400000));
+        d=`${t.getUTCFullYear()}-${String(t.getUTCMonth()+1).padStart(2,"0")}-${String(t.getUTCDate()).padStart(2,"0")}`;
       }else if(raw){
         const t=new Date(raw);
         if(!isNaN(t))d=`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`;
@@ -422,7 +425,8 @@ function csRecs(){
       f:C.fcr>=0?FCRN.indexOf(norm(row[C.fcr])):-1,
       cat:(C.cat>=0&&String(row[C.cat]||"").trim())||"(blank)",
       sub:(C.sub>=0&&String(row[C.sub]||"").trim())||"(blank)",
-      date:d
+      date:d,
+      dr:C.date>=0?String(row[C.date]||"").trim():""
     });
   }
   out.forEach(r=>{r.a=r.k&&r.c?(r.k+r.c)/2:r.k||r.c||0});
@@ -664,7 +668,10 @@ if(csView==="trend"){
   const csatPts=daily.map(d=>({label:d.label,v:d.csat,n:d.n}));
   const fcrPts=daily.map(d=>({label:d.label,v:d.fcr,n:d.n}));
 
-  $id("csTables").innerHTML=tabs+`
+  const withDate=out.filter(r=>r.date).length,sampleRaw=(out.find(r=>r.dr)||{}).dr||"(empty)";
+  const diag=C.date<0?"No date column found. Headers read from row 1: "+esc((cs.rows[0]||[]).join(" | ")):
+    "Date column: \""+esc((cs.rows[0]||[])[C.date]||"")+"\" · "+withDate+" of "+out.length+" surveys have a readable date · first date value: \""+esc(sampleRaw)+"\"";
+  $id("csTables").innerHTML=tabs+`<div class="note" style="padding:0;margin:10px 0 0">${diag}</div>
     <div class="trend-wrap">
       <div class="chart-card">
         <h3>DAILY CSAT</h3>
@@ -728,6 +735,8 @@ $id("csClear").onclick=()=>{if(!confirm("Clear the survey data for everyone's vi
 $id("csExport").onclick=()=>{
 const out=cs.rows.filter(w=>w&&w.some(x=>String(x==null?"":x).trim())).map(w=>Array.from(w,x=>x==null?"":String(x)));
 if(out.length<2){alert("There is no survey data to export. Paste the sheet at A1 first.");return}
+const Cx=csCols();
+if(Cx.date<0||/^c\d+$/.test(String(out[1][0]||""))){if(!confirm("Warning: the sheet has no date column (or it still holds data from the old export, where column A shows c0, c1, c2). The TREND tab will stay empty.\n\nPaste the original survey export at A1 first.\n\nExport anyway?"))return}
 const blob=new Blob([JSON.stringify({updated:Date.now(),rows:out})],{type:"application/json"});
 const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="difficulties.json";document.body.appendChild(a);a.click();a.remove();
 setTimeout(()=>URL.revokeObjectURL(a.href),1000);
