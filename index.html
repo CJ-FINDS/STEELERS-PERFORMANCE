@@ -92,6 +92,32 @@ body::before,#picker::before,#lb::before,#ts::before,#csat::before{content:"";po
 @media(max-width:560px){.switch{position:static;margin-bottom:10px}}
 .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
 .qtog{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+ .qtog button {
+  transition:
+    background .2s ease,
+    color .2s ease,
+    border-color .2s ease,
+    transform .2s ease,
+    box-shadow .2s ease;
+}
+
+.qtog button:hover {
+  background: var(--white);
+  color: #000;
+  border-color: var(--white);
+  transform: translateY(-3px);
+  box-shadow: 0 5px 14px rgba(255,255,255,.12);
+}
+
+.qtog button:active {
+  transform: translateY(0);
+}
+
+.qtog button.on {
+  background: var(--white);
+  color: #000;
+  border-color: var(--white);
+}
 .qtog button{font:inherit;font-weight:800;font-size:12px;letter-spacing:.12em;color:var(--text);background:transparent;border:1px solid var(--edge);border-radius:10px;padding:9px 16px;cursor:pointer}
 .qtog button.on{background:var(--white);color:#000}
 .bars{display:flex;gap:10px;align-items:flex-end}
