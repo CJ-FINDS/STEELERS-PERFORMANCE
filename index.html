@@ -689,7 +689,7 @@ if(csSel){
  drill=`<div class="card dr" id="drill"><h3>${esc(title)} · ${total} PEGA CASES</h3>${total?h+"</tbody></table>":'<div class="empty">No cases.</div>'}</div>`;
 }
 
-const tabs=`<div class="qtog">${[["team","TEAM"],["agent","BY AGENT"],["trend","TEAM TREND"],["agenttrend","AGENT TREND"]].map(([k,l])=>`<button data-view="${k}"${csView===k?' class="on"':""}>${l}</button>`).join("")}</div>`;
+const tabs=`<div class="qtog">${[["team","TEAM SURVEY COUNT"],["agent","AGENT SURVEY COUNT"],["trend","TEAM TREND"],["agenttrend","AGENT TREND"]].map(([k,l])=>`<button data-view="${k}"${csView===k?' class="on"':""}>${l}</button>`).join("")}</div>`;
 
 const SB=[5,4.5,4,3.5,3,2.5,2,1.5,1],FS=["RESOLVED","RESOLVED, MORE THAN 1","NOT RESOLVED, 1ST","NOT RESOLVED, REPEAT"];
 const chip=(n,key,cls)=>`<td class="v">${n?`<button class="chip ${cls}${csSel===key?" sel":""}" data-k="${key}">${n}</button>`:""}</td>`;
