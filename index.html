@@ -635,7 +635,7 @@ $id("csNote").textContent=cs.rows.length<=1&&csOldPub?"The published difficultie
 const csatBars=[5,4.5,4,3.5,3,2.5,2,1.5,1].map(s=>({key:"s"+s,label:String(s),sc:1,bad:s<=4,cls:s===5?"g5":s===4.5?"g45":"",n:out.filter(r=>r.a===s).length}));
 const fcrBars=[0,1,2,3].map(i=>({key:"f"+i,label:FCR_LABELS[i],bad:i>=2,cls:i===0?"g5":i===1?"g45":"",n:out.filter(r=>r.f===i).length}));
 const chart=(bars,title,sub)=>{const mx=Math.max(1,...bars.map(b=>b.n));
- return `<div class="card"><h3>${title}</h3><div class="note" style="padding:0;text-align:left;margin:0 0 8px">${sub}</div><div class="hint">TAP A BAR TO SEE ITS CATEGORIES</div><div class="bars">`+
+ return `<div class="card"><h3>${title}</h3><div class="note" style="padding:0;text-align:left;margin:0 0 8px">${sub}</div><div class="bars">`+
  bars.map(b=>`<button class="bar2${b.bad?" bad":""}${b.cls?" "+b.cls:""}${b.sc?" sc":""}${csSel===b.key?" sel":""}" data-k="${b.key}" title="Tap to see categories and sub categories"><span class="bn">${b.n}</span><span class="bf" style="height:${Math.round(b.n/mx*170)}px"></span><span class="bl">${esc(b.label)}</span></button>`).join("")+"</div></div>"};
 
 let drill='<div class="card dr" id="drill"><div class="empty">'+(csView==="agent"?"Tap a score":"Tap a bar")+' to see the categories and sub categories behind it.</div></div>';
@@ -720,8 +720,8 @@ $id("trendFab").classList.add("hidden");
 
 // ---------- TEAM / BY AGENT ----------
 $id("csTables").innerHTML=tabs+(csView==="agent"?agentCard():`<div class="two">`+
-  chart(csatBars,"CSAT SCORES","Average of Knowledge and Courtesy per survey. Red = DSAT (4 and below), green = 4.5 and 5.")+
-  chart(fcrBars,"FCR","Green = resolved. Red = still not resolved.")+
+  chart(csatBars,"CSAT SCORES","")+
+  chart(fcrBars,"FCR","")+
 `</div>`)+drill;
 }
 
