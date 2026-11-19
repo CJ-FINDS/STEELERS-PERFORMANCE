@@ -193,7 +193,7 @@ body::before,#picker::before,#lb::before,#ts::before,#csat::before{content:"";po
 <div class="lbgrid" id="tsGrid"></div>
 </div></div>
 
-<div class="modal on" id="picker"><button class="switch left" id="toCsat2" style="position:fixed;top:calc(22px + env(safe-area-inset-top,0px));left:20px">SEE DIFFICULTIES</button><div class="pick">
+<div class="modal on" id="picker"><button class="switch left" id="toCsat2" style="position:fixed;top:calc(22px + env(safe-area-inset-top,0px));left:20px">SWITCH TO SURVEY DATA</button><div class="pick">
 <h1>PROGRESS STAT</h1>
 <h2>STEELERS MTD</h2>
 <div class="lbbtns"><button class="lbbtn" id="lbBtn">VIEW OUTLIERS</button><button class="lbbtn" id="tsBtn">VIEW TEAM SCORES</button></div>
@@ -202,7 +202,7 @@ body::before,#picker::before,#lb::before,#ts::before,#csat::before{content:"";po
 
 <div class="modal" id="csat"><div class="lbwrap">
 <div class="lbtop"><button class="switch" id="csBack" style="position:static">SWITCH PROGRESS VIEW</button></div>
-<h2 class="csTitle">SEE DIFFICULTIES</h2>
+<h2 class="csTitle">SURVEY DATA</h2>
 <div class="note" id="csNote"></div>
 <div class="csgrid" id="csTables"></div>
 <button class="fab" id="csFab" title="Survey data (TEAM / BY AGENT)" aria-label="Open survey data sheet">&#128214;</button>
@@ -694,7 +694,7 @@ const tabs=`<div class="qtog">${[["team","TEAM SURVEY COUNT"],["agent","AGENT SU
 const SB=[5,4.5,4,3.5,3,2.5,2,1.5,1],FS=["RESOLVED","RESOLVED, MORE THAN 1","NOT RESOLVED, 1ST","NOT RESOLVED, REPEAT"];
 const chip=(n,key,cls)=>`<td class="v">${n?`<button class="chip ${cls}${csSel===key?" sel":""}" data-k="${key}">${n}</button>`:""}</td>`;
 const agentCard=()=>{
- let h=`<div class="card"><h3>SCORES PER AGENT</h3><div class="note" style="padding:0;text-align:left;margin:0 0 8px">CSAT = average of Knowledge and Courtesy per survey. Numbers are survey counts.</div><div class="hint">TAP A SCORE TO SEE ITS CATEGORIES</div><div class="scroll"><table class="cst agt"><colgroup><col style="width:190px"><col style="width:70px">${SB.map(()=>'<col style="width:56px">').join("")}<col><col><col><col></colgroup><thead><tr><th rowspan="2">NAME</th><th rowspan="2">SURVEYS</th><th class="grp2" colspan="9">CSAT</th><th class="grp2" colspan="4">FCR</th></tr><tr>${SB.map(s=>`<th>${s}</th>`).join("")}${FS.map(l=>`<th>${l}</th>`).join("")}</tr></thead><tbody>`;
+ let h=`<div class="card"><h3>SCORES PER AGENT</h3><div class="note" style="padding:0;text-align:left;margin:0 0 8px">CSAT = average of Knowledge and Courtesy per survey. Numbers are survey counts.</div><div class=""></div><div class="scroll"><table class="cst agt"><colgroup><col style="width:190px"><col style="width:70px">${SB.map(()=>'<col style="width:56px">').join("")}<col><col><col><col></colgroup><thead><tr><th rowspan="2">NAME</th><th rowspan="2">SURVEYS</th><th class="grp2" colspan="9">CSAT</th><th class="grp2" colspan="4">FCR</th></tr><tr>${SB.map(s=>`<th>${s}</th>`).join("")}${FS.map(l=>`<th>${l}</th>`).join("")}</tr></thead><tbody>`;
  const rowFor=(id,nm)=>{const mine=out.filter(r=>r.ag===id);
   return `<tr><td>${esc(nm)}</td><td class="v">${mine.length||"·"}</td>`+
    SB.map(s=>chip(mine.filter(r=>r.a===s).length,"a:"+id+":s"+s,s<=4?"bad":s===5?"g5":"g45")).join("")+
@@ -741,7 +741,7 @@ if(csView==="agenttrend"){
     </div>`;
   }
   $id("csTables").innerHTML=tabs+(diag?`<div class="note" style="padding:0;margin:10px 0 0">${diag}</div>`:"")+
-    `<div class="hint" style="margin-top:14px">TAP AN AGENT TO SEE THEIR TREND</div>`+list+charts;
+    `<div class="" style="margin-top:14px"></div>`+list+charts;
   $id("csFab").classList.add("hidden");
   $id("trendFab").classList.remove("hidden");
   if(atSel)requestAnimationFrame(()=>{
