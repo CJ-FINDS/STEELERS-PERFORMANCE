@@ -163,6 +163,11 @@ body::before,#picker::before,#lb::before,#ts::before,#csat::before{content:"";po
 .chart-empty{color:var(--muted);font-size:14px;padding:40px 0;text-align:center}
 .chart-tip{position:absolute;pointer-events:none;background:#111;border:1px solid var(--edge);color:var(--text);font-size:13px;font-weight:700;padding:8px 12px;border-radius:10px;white-space:nowrap;z-index:5;opacity:0;transition:opacity .12s;box-shadow:0 6px 20px rgba(0,0,0,.45)}
 .chart-tip.on{opacity:1}
+
+.names button.on{background:var(--white);color:#000}
+.names button{transition:background .2s,color .2s,transform .2s,box-shadow .2s}
+.names button:hover{transform:translateY(-3px);box-shadow:0 5px 14px rgba(255,255,255,.12)}
+.names button .tg{margin-top:3px}
 </style></head><body>
 <header>
 <button class="switch left" id="toCsat">SEE DIFFICULTIES</button>
@@ -396,6 +401,7 @@ const FCR_LABELS=["Yes. resolved in one interaction","Yes. but it took more than
 const FCRN=FCR_LABELS.map(norm);
 let cs={rows:[]},csLocalTs=0,csSel=null,csView="team";
 let tr={rows:[]},trLocalTs=0;   // separate store for TREND tab → trend.json
+let atSel=null;
 let sheetMode="cs";              // which data the sheet modal is editing: "cs" | "trend"
 const AG_ALIAS={carlalanada:"carlalynnlanada",jaycabiles:"jadecabiles"};
 const agKey=s=>{const n=norm(s);return AG_ALIAS[n]||n};
@@ -683,7 +689,7 @@ if(csSel){
  drill=`<div class="card dr" id="drill"><h3>${esc(title)} · ${total} PEGA CASES</h3>${total?h+"</tbody></table>":'<div class="empty">No cases.</div>'}</div>`;
 }
 
-const tabs=`<div class="qtog">${[["team","TEAM"],["agent","BY AGENT"],["trend","TREND"]].map(([k,l])=>`<button data-view="${k}"${csView===k?' class="on"':""}>${l}</button>`).join("")}</div>`;
+const tabs=`<div class="qtog">${[["team","TEAM"],["agent","BY AGENT"],["trend","TEAM TREND"],["agenttrend","AGENT TREND"]].map(([k,l])=>`<button data-view="${k}"${csView===k?' class="on"':""}>${l}</button>`).join("")}</div>`;
 
 const SB=[5,4.5,4,3.5,3,2.5,2,1.5,1],FS=["RESOLVED","RESOLVED, MORE THAN 1","NOT RESOLVED, 1ST","NOT RESOLVED, REPEAT"];
 const chip=(n,key,cls)=>`<td class="v">${n?`<button class="chip ${cls}${csSel===key?" sel":""}" data-k="${key}">${n}</button>`:""}</td>`;
@@ -703,6 +709,49 @@ const agentCard=()=>{
 };
 
 // ---------- TREND view (uses separate trend.json / tr.rows) ----------
+if(csView==="agenttrend"){
+  const {C:aC,out:aAll}=csRecs(tr.rows);
+  const aOut=aAll.filter(r=>r.a);
+  const cnt={};aOut.forEach(r=>{if(r.ag)cnt[r.ag]=(cnt[r.ag]||0)+1});
+  const nameBtn=(id,nm)=>`<button data-at="${id}" class="${atSel===id?"on":""}">${esc(nm)}<span class="tg">${cnt[id]||0} SURVEYS</span></button>`;
+  let list="";
+  GROUPS.forEach(g=>{list+=`<div class="grp"><h4>${g.label}</h4><div class="names">`+g.names.map(n=>nameBtn(norm(n),n)).join("")+`</div></div>`});
+  const others=new Map();
+  aOut.forEach(r=>{if(r.ag&&!rosterIds.has(r.ag)&&!others.has(r.ag))others.set(r.ag,r.agn||r.ag)});
+  if(others.size){
+    list+=`<div class="grp"><h4>OTHER AGENTS (NOT IN THE ROSTER)</h4><div class="names">`+
+      [...others.entries()].sort((a,b)=>a[1].localeCompare(b[1])).map(([id,nm])=>nameBtn(id,nm)).join("")+`</div></div>`;
+  }
+  const diag=tr.rows.length<=1?"No trend data yet. Tap the blue chart book button and paste the survey export at A1 (headers in row 1).":
+    aC.agent<0?"No Agent Name column found. Headers read from row 1: "+esc((tr.rows[0]||[]).join(" | ")):
+    aC.date<0?"No date column found. Headers read from row 1: "+esc((tr.rows[0]||[]).join(" | ")):"";
+  let charts='<div class="card"><div class="empty">Tap an agent name to see their daily CSAT and FCR.</div></div>',pts1=null,pts2=null,selName="";
+  if(atSel){
+    selName=((AGENTS.find(a=>a.id===atSel)||{}).name)||others.get(atSel)||atSel;
+    const daily=csDaily(aOut.filter(r=>r.ag===atSel));
+    pts1=daily.map(d=>({label:d.label,v:d.csat,n:d.n}));
+    pts2=daily.map(d=>({label:d.label,v:d.fcr,n:d.n}));
+    charts=`<div class="trend-wrap" id="atCharts">
+      <div class="chart-card"><h3>${esc(selName.toUpperCase())} · DAILY CSAT</h3>
+        <div class="chart-sub">Average of Knowledge + Courtesy · Target 4.9 · Hover a point for the exact score</div>
+        <div class="chart-box"><canvas id="atCsat"></canvas></div></div>
+      <div class="chart-card"><h3>${esc(selName.toUpperCase())} · DAILY FCR %</h3>
+        <div class="chart-sub">% resolved on first interaction · Hover a point for the exact rate</div>
+        <div class="chart-box"><canvas id="atFcr"></canvas></div></div>
+    </div>`;
+  }
+  $id("csTables").innerHTML=tabs+(diag?`<div class="note" style="padding:0;margin:10px 0 0">${diag}</div>`:"")+
+    `<div class="hint" style="margin-top:14px">TAP AN AGENT TO SEE THEIR TREND</div>`+list+charts;
+  $id("csFab").classList.add("hidden");
+  $id("trendFab").classList.remove("hidden");
+  if(atSel)requestAnimationFrame(()=>{
+    const c1=$id("atCsat"),c2=$id("atFcr");
+    if(c1)drawLineChart(c1,pts1,{minY:1,maxY:5,target:4.9,color:"#22c55e"});
+    if(c2)drawLineChart(c2,pts2,{minY:0,maxY:100,isPct:true,color:"#60a5fa"});
+  });
+  return;
+}
+
 if(csView==="trend"){
   const {C:tC,out:tAll}=csRecs(tr.rows);
   const tOut=tAll.filter(r=>r.a);
@@ -754,6 +803,8 @@ $id("csTables").innerHTML=tabs+(csView==="agent"?agentCard():`<div class="two">`
 $id("csTables").addEventListener("click",e=>{
  const v=e.target.closest("button[data-view]");
  if(v){csView=v.dataset.view;csSel=null;csRender();return}
+ const at=e.target.closest("button[data-at]");
+ if(at){atSel=atSel===at.dataset.at?null:at.dataset.at;csRender();const c=$id("atCharts");if(c)c.scrollIntoView({behavior:"smooth",block:"nearest"});return}
  const b=e.target.closest("button[data-k]");
  if(b){csSel=csSel===b.dataset.k?null:b.dataset.k;csRender();const d=$id("drill");if(d&&csSel)d.scrollIntoView({behavior:"smooth",block:"nearest"})}});
 
@@ -805,7 +856,7 @@ fetch("difficulties.json?v="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json(
 if(!j||!Array.isArray(j.rows))return;
 if(isOldFmt(j.rows)){csOldPub=true;if($id("csat").classList.contains("on"))csRender();return}
 if((+j.updated||0)>=csLocalTs)cs.rows=j.rows;
-if($id("csat").classList.contains("on")&&csView!=="trend")csRender();
+if($id("csat").classList.contains("on")&&csView!=="trend"&&csView!=="agenttrend")csRender();
 }).catch(()=>{});
 }
 function loadTrend(){
@@ -813,7 +864,7 @@ if(location.protocol==="file:")return;
 fetch("trend.json?v="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{
 if(!j||!Array.isArray(j.rows))return;
 if((+j.updated||0)>=trLocalTs)tr.rows=j.rows;
-if($id("csat").classList.contains("on")&&csView==="trend")csRender();
+if($id("csat").classList.contains("on")&&(csView==="trend"||csView==="agenttrend"))csRender();
 }).catch(()=>{});
 }
 
