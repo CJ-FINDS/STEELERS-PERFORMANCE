@@ -349,7 +349,7 @@ let passed=0,counted=0;
 AGENTS.forEach(x=>{const an=num("Voice Answered",x),aq=num("Revenue - ACQ + CROSS (Post Recoup)",x);if(ok(an)&&ok(aq)&&an){counted++;if(aq/an>=CFG.acqTarget)passed++}});
 const rate=counted?passed/counted:NaN;
 const mtd="<thead><tr><th>METRIC</th><th style='text-align:right'>SCORE</th></tr></thead><tbody>"+
-row3("CALLS",N(ans))+row3("AHT",N(aht),undefined,above(aht,CFG.ahtTarget))+row3("CSAT",N(csat,2),undefined,below(csat,CFG.csatTarget))+row3("VRR",P(res),undefined,below(res,CFG.vrrRed))+row3("FCR",P(fcr))+row3("TAKE RATE",P(take),undefined,below(take,CFG.takeTarget))+row3("TTS",P(trf),undefined,xfC(trf))+row3("TRANSFERS%",P(xfer),undefined,above(xfer,CFG.transferMax))+row3("P2P",P(pay),undefined,p2pC(pay))+"</tbody>";
+row3("CALLS",N(ans))+row3("AHT",N(aht),undefined,above(aht,CFG.ahtTarget))+row3("CSAT",N(csat,2),undefined,below(csat,CFG.csatTarget))+row3("VRR",P(res),undefined,below(res,CFG.vrrRed))+row3("FCR",P(fcr),undefined,below(fcr,CFG.fcrTarget))+row3("TAKE RATE",P(take),undefined,below(take,CFG.takeTarget))+row3("TTS",P(trf),undefined,xfC(trf))+row3("TRANSFERS%",P(xfer),undefined,above(xfer,CFG.transferMax))+row3("P2P",P(pay),undefined,p2pC(pay))+"</tbody>";
 const sales="<thead><tr><th>METRIC</th><th style='text-align:right'>VALUE</th></tr></thead><tbody>"+
 row3("ACQ",$(acq))+row3("RENEWAL",$(ren))+row3("TOTAL",$(tot))+row3("$/CALL",$(pc),undefined,pcC(pc))+row3("PASSING RATE",P(rate),undefined,below(rate,CFG.passRateTarget))+"</tbody>";
 $id("tsGrid").innerHTML=`<div class="card"><h3>MTD TABLE</h3><table>${mtd}</table></div><div class="card"><h3>SALES TABLE</h3><table>${sales}</table></div>`;
