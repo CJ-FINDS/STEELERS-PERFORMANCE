@@ -27,7 +27,9 @@ tr.miss td,tr.red td{background:var(--red);color:var(--text)}
 tr.orange td{background:#f97316;color:#000}
 .edit{width:70px;text-align:right;font:inherit;font-weight:700;color:var(--text);background:#000;border:1px solid var(--edge);border-radius:8px;padding:3px 6px}
 .edit[readonly]{border-color:var(--soft);cursor:pointer}
-.fab{position:fixed;right:max(20px,env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));width:58px;height:58px;border-radius:50%;border:1px solid #000;background:var(--white);color:#000;font-size:26px;cursor:pointer;box-shadow:0 8px 28px rgba(255,255,255,.18)}
+.fab{position:fixed;right:max(20px,env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));width:58px;height:58px;border-radius:50%;border:1px solid #000;background:var(--white);color:#000;font-size:26px;cursor:pointer;box-shadow:0 8px 28px rgba(255,255,255,.18);z-index:15}
+.fab.trend{right:max(90px,calc(env(safe-area-inset-right,0px) + 70px));background:#e0f2fe;color:#0c4a6e}
+.fab.hidden{display:none}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;padding:16px;z-index:5}
 .modal.on{display:flex}
 #pwModal{z-index:30}
@@ -172,12 +174,13 @@ body::before,#picker::before,#lb::before,#ts::before,#csat::before{content:"";po
 <h2 class="csTitle">SEE DIFFICULTIES</h2>
 <div class="note" id="csNote"></div>
 <div class="csgrid" id="csTables"></div>
-<button class="fab" id="csFab" title="Open data sheet" aria-label="Open data sheet">&#128214;</button>
+<button class="fab" id="csFab" title="Survey data (TEAM / BY AGENT)" aria-label="Open survey data sheet">&#128214;</button>
+<button class="fab trend hidden" id="trendFab" title="Trend data (TREND tab)" aria-label="Open trend data sheet">&#128202;</button>
 </div></div>
 
 <div class="modal" id="csModal"><div class="panel">
-<div class="bar"><div><b>Survey data</b> <small id="csHint"></small></div>
-<div><button id="csAddRows" class="ghostb">+ Rows</button><button id="csAddCols" class="ghostb">+ Cols</button><button id="csExport" title="Download difficulties.json to publish for everyone">Export data</button><button id="csClear">Clear</button><button id="csClose">Done</button></div></div>
+<div class="bar"><div><b id="csModalTitle">Survey data</b> <small id="csHint"></small></div>
+<div><button id="csAddRows" class="ghostb">+ Rows</button><button id="csAddCols" class="ghostb">+ Cols</button><button id="csExport" title="Download JSON to publish">Export data</button><button id="csClear">Clear</button><button id="csClose">Done</button></div></div>
 <div class="sheet" id="csSheet"></div></div></div>
 
 <div class="modal" id="pwModal"><div class="panel" style="width:min(380px,100%)">
@@ -366,15 +369,25 @@ const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
 const FCR_LABELS=["Yes. resolved in one interaction","Yes. but it took more than one interaction.","No. this is my first interaction and it is not resolved.","No. I have contacted you more than once and it is still not resolved."];
 const FCRN=FCR_LABELS.map(norm);
 let cs={rows:[]},csLocalTs=0,csSel=null,csView="team";
+let tr={rows:[]},trLocalTs=0;   // separate store for TREND tab → trend.json
+let sheetMode="cs";              // which data the sheet modal is editing: "cs" | "trend"
 const AG_ALIAS={carlalanada:"carlalynnlanada",jaycabiles:"jadecabiles"};
 const agKey=s=>{const n=norm(s);return AG_ALIAS[n]||n};
+let csOldPub=false;
+const isOldFmt=rows=>!!(rows&&rows[1]&&/^c\d+$/.test(String(rows[1][0]||""))&&!(rows[0]||[]).some(x=>norm(x).includes("date")));
 try{const d=JSON.parse(localStorage.getItem("ps_diff")||"null");if(d){cs.rows=d.rows||[];csLocalTs=+d.ts||0}}catch(e){}
+try{const d=JSON.parse(localStorage.getItem("ps_trend")||"null");if(d){tr.rows=d.rows||[];trLocalTs=+d.ts||0}}catch(e){}
+if(isOldFmt(cs.rows)){cs.rows=[];csLocalTs=0;try{localStorage.removeItem("ps_diff")}catch(e){}}
 const csSave=()=>{csLocalTs=Date.now();try{localStorage.setItem("ps_diff",JSON.stringify({rows:cs.rows,ts:csLocalTs}))}catch(e){}};
+const trSave=()=>{trLocalTs=Date.now();try{localStorage.setItem("ps_trend",JSON.stringify({rows:tr.rows,ts:trLocalTs}))}catch(e){}};
+const activeRows=()=>sheetMode==="trend"?tr.rows:cs.rows;
+const activeSave=()=>sheetMode==="trend"?trSave():csSave();
 $id("toCsat").onclick=$id("toCsat2").onclick=()=>{location.hash="csat"};
 $id("csBack").onclick=()=>{location.hash=""};
 
-function csCols(){
-  const h=(cs.rows[0]||[]).map(norm);
+function csCols(rows){
+  const src=rows||cs.rows;
+  const h=(src[0]||[]).map(norm);
   const f=(ex,part)=>{
     let i=-1;
     for(const k of ex){i=h.indexOf(k);if(i>=0)return i}
@@ -393,10 +406,11 @@ function csCols(){
   };
 }
 
-function csRecs(){
-  const C=csCols(),out=[];
-  for(let r=1;r<cs.rows.length;r++){
-    const row=cs.rows[r]||[];
+function csRecs(rows){
+  const src=rows||cs.rows;
+  const C=csCols(src),out=[];
+  for(let r=1;r<src.length;r++){
+    const row=src[r]||[];
     if(!row.some(x=>String(x||"").trim()))continue;
     const sc=i=>{const v=Math.round(parseFloat(row[i]));return v>=1&&v<=5?v:0};
     let d="";
@@ -416,7 +430,7 @@ function csRecs(){
       }
     }
     out.push({
-      id:C.pega>=0&&norm(row[C.pega])?norm(row[C.pega]):"r"+r,
+      id:C.pega>=0&&norm(row[C.pega])&&norm(row[C.pega])!=="notset"?norm(row[C.pega]):"r"+r,
       k:C.k>=0?sc(C.k):0,
       c:C.c>=0?sc(C.c):0,
       a:0,
@@ -616,7 +630,7 @@ const{C,out:all}=csRecs();
 const out=all.filter(r=>r.a),noAvg=all.length-out.length;
 const rosterIds=new Set(AGENTS.map(a=>a.id)),unl=out.filter(r=>r.ag&&!rosterIds.has(r.ag)).length;
 const miss=[...(csView==="agent"?[["Agent Name",C.agent]]:[]),...(csView==="trend"?[["Date",C.date]]:[]),["Knowledgeable rating",C.k],["Courteous rating",C.c],["FCR value",C.fcr],["Category",C.cat],["Sub category",C.sub],["Pega case",C.pega]].filter(x=>x[1]<0).map(x=>x[0]);
-$id("csNote").textContent=cs.rows.length<=1?"No data yet. Tap the book button and paste the sheet at A1 (headers in row 1).":miss.length?"Columns not found: "+miss.join(", ")+". Check the header names in row 1.":noAvg?noAvg+" row(s) skipped: no Knowledge or Courtesy score.":(csView==="agent"&&unl?unl+" survey(s) are from agents not on the roster; they are listed under OTHER AGENTS.":"");
+$id("csNote").textContent=cs.rows.length<=1&&csOldPub?"The published difficulties.json is in the old format (c0, c1 and no dates), so it was ignored. Paste the original survey export in the book, click Export data, and upload the new file.":cs.rows.length<=1?"No data yet. Tap the book button and paste the sheet at A1 (headers in row 1).":miss.length?"Columns not found: "+miss.join(", ")+". Check the header names in row 1.":noAvg?noAvg+" row(s) skipped: no Knowledge or Courtesy score.":(csView==="agent"&&unl?unl+" survey(s) are from agents not on the roster; they are listed under OTHER AGENTS.":"");
 
 const csatBars=[5,4.5,4,3.5,3,2.5,2,1.5,1].map(s=>({key:"s"+s,label:String(s),sc:1,bad:s<=4,cls:s===5?"g5":s===4.5?"g45":"",n:out.filter(r=>r.a===s).length}));
 const fcrBars=[0,1,2,3].map(i=>({key:"f"+i,label:FCR_LABELS[i],bad:i>=2,cls:i===0?"g5":i===1?"g45":"",n:out.filter(r=>r.f===i).length}));
@@ -662,15 +676,18 @@ const agentCard=()=>{
  return h+"</tbody></table></div></div>";
 };
 
-// ---------- TREND view ----------
+// ---------- TREND view (uses separate trend.json / tr.rows) ----------
 if(csView==="trend"){
-  const daily=csDaily(out);
+  const {C:tC,out:tAll}=csRecs(tr.rows);
+  const tOut=tAll.filter(r=>r.a);
+  const daily=csDaily(tOut);
   const csatPts=daily.map(d=>({label:d.label,v:d.csat,n:d.n}));
   const fcrPts=daily.map(d=>({label:d.label,v:d.fcr,n:d.n}));
 
-  const withDate=out.filter(r=>r.date).length,sampleRaw=(out.find(r=>r.dr)||{}).dr||"(empty)";
-  const diag=C.date<0?"No date column found. Headers read from row 1: "+esc((cs.rows[0]||[]).join(" | ")):
-    "Date column: \""+esc((cs.rows[0]||[])[C.date]||"")+"\" · "+withDate+" of "+out.length+" surveys have a readable date · first date value: \""+esc(sampleRaw)+"\"";
+  const withDate=tOut.filter(r=>r.date).length,sampleRaw=(tOut.find(r=>r.dr)||{}).dr||"(empty)";
+  const diag=tr.rows.length<=1?"No trend data yet. Tap the blue chart book button and paste the survey export at A1 (headers in row 1). Data is saved to trend.json.":
+    tC.date<0?"No date column found. Headers read from row 1: "+esc((tr.rows[0]||[]).join(" | ")):
+    "Date column: \""+esc((tr.rows[0]||[])[tC.date]||"")+"\" · "+withDate+" of "+tOut.length+" surveys have a readable date · first date value: \""+esc(sampleRaw)+"\"";
   $id("csTables").innerHTML=tabs+`<div class="note" style="padding:0;margin:10px 0 0">${diag}</div>
     <div class="trend-wrap">
       <div class="chart-card">
@@ -685,6 +702,10 @@ if(csView==="trend"){
       </div>
     </div>`;
 
+  // show trend book, hide survey book on this tab
+  $id("csFab").classList.add("hidden");
+  $id("trendFab").classList.remove("hidden");
+
   requestAnimationFrame(()=>{
     const c1=$id("csatChart"),c2=$id("fcrChart");
     if(c1)drawLineChart(c1,csatPts,{minY:1,maxY:5,target:4.9,color:"#22c55e"});
@@ -692,6 +713,10 @@ if(csView==="trend"){
   });
   return;
 }
+
+// TEAM / BY AGENT → survey book only
+$id("csFab").classList.remove("hidden");
+$id("trendFab").classList.add("hidden");
 
 // ---------- TEAM / BY AGENT ----------
 $id("csTables").innerHTML=tabs+(csView==="agent"?agentCard():`<div class="two">`+
@@ -706,48 +731,63 @@ $id("csTables").addEventListener("click",e=>{
  const b=e.target.closest("button[data-k]");
  if(b){csSel=csSel===b.dataset.k?null:b.dataset.k;csRender();const d=$id("drill");if(d&&csSel)d.scrollIntoView({behavior:"smooth",block:"nearest"})}});
 
-/* Data sheet for survey */
+/* Data sheet – shared UI, mode switches between survey (cs) and trend (tr) */
 const CS_CAP=2000;
 function csGrid(){
-const arr=cs.rows,R=Math.min(arr.length+xRows,CS_CAP),C=Math.max(xCols,...arr.slice(0,CS_CAP).map(r=>r.length+1));
+const arr=activeRows(),R=Math.min(arr.length+xRows,CS_CAP),C=Math.max(xCols,...arr.slice(0,CS_CAP).map(r=>r.length+1));
 let h="<table><thead><tr><th></th>";
 for(let k=0;k<C;k++)h+=`<th>${colName(k)}</th>`;
 h+="</tr></thead><tbody>";
 for(let r=0;r<R;r++){h+=`<tr><td class="n">${r+1}</td>`;for(let k=0;k<C;k++){const v=(arr[r]&&arr[r][k])||"";h+=`<td contenteditable="true" data-r="${r}" data-c="${k}">${esc(v)}</td>`}h+="</tr>"}
 $id("csSheet").innerHTML=h+"</tbody></table>";
-$id("csHint").textContent="Click A1 and paste the survey export (replaces old data). Headers in row 1."+(arr.length>CS_CAP?" Showing first "+CS_CAP+" of "+arr.length+" rows.":"");
+const label=sheetMode==="trend"?"trend.json":"difficulties.json";
+$id("csModalTitle").textContent=sheetMode==="trend"?"Trend data":"Survey data";
+$id("csHint").textContent="Click A1 and paste the survey export (replaces old data). Headers in row 1. Exports as "+label+"."+(arr.length>CS_CAP?" Showing first "+CS_CAP+" of "+arr.length+" rows.":"");
 }
 $id("csAddRows").onclick=()=>grow($id("csSheet"),csGrid,25,0);$id("csAddCols").onclick=()=>grow($id("csSheet"),csGrid,0,10);
-$id("csFab").onclick=()=>{csGrid();$id("csModal").classList.add("on")};
+function openSheet(mode){sheetMode=mode;csGrid();$id("csModal").classList.add("on")}
+$id("csFab").onclick=()=>openSheet("cs");
+$id("trendFab").onclick=()=>openSheet("trend");
 const csClose=()=>{$id("csModal").classList.remove("on");csRender()};
 $id("csClose").onclick=csClose;
 $id("csModal").addEventListener("click",e=>{if(e.target===$id("csModal"))csClose()});
-$id("csSheet").addEventListener("input",e=>{const t=e.target;if(!t.dataset||t.dataset.r===undefined)return;const r=+t.dataset.r,k=+t.dataset.c;while(cs.rows.length<=r)cs.rows.push([]);cs.rows[r][k]=t.textContent;csSave()});
+$id("csSheet").addEventListener("input",e=>{const t=e.target;if(!t.dataset||t.dataset.r===undefined)return;const r=+t.dataset.r,k=+t.dataset.c;const arr=activeRows();while(arr.length<=r)arr.push([]);arr[r][k]=t.textContent;activeSave()});
 $id("csSheet").addEventListener("paste",e=>{
 const t=e.target.closest("td[data-r]");if(!t)return;e.preventDefault();
 const rows=parseTSV((e.clipboardData||window.clipboardData).getData("text"));
-const arr=cs.rows,r0=+t.dataset.r,c0=+t.dataset.c;
+const arr=activeRows(),r0=+t.dataset.r,c0=+t.dataset.c;
 if(r0===0&&c0===0)arr.length=0;
 rows.forEach((cells,i)=>{while(arr.length<=r0+i)arr.push([]);cells.forEach((v,j)=>{arr[r0+i][c0+j]=String(v).trim()})});
-csSel=null;csSave();csGrid()});
-$id("csClear").onclick=()=>{if(!confirm("Clear the survey data for everyone's view once published?"))return;cs.rows=[];csSel=null;csSave();csGrid()};
+csSel=null;activeSave();csGrid()});
+$id("csClear").onclick=()=>{const which=sheetMode==="trend"?"trend":"survey";if(!confirm("Clear the "+which+" data for everyone's view once published?"))return;activeRows().length=0;csSel=null;activeSave();csGrid()};
 
 $id("csExport").onclick=()=>{
-const out=cs.rows.filter(w=>w&&w.some(x=>String(x==null?"":x).trim())).map(w=>Array.from(w,x=>x==null?"":String(x)));
-if(out.length<2){alert("There is no survey data to export. Paste the sheet at A1 first.");return}
-const Cx=csCols();
-if(Cx.date<0||/^c\d+$/.test(String(out[1][0]||""))){if(!confirm("Warning: the sheet has no date column (or it still holds data from the old export, where column A shows c0, c1, c2). The TREND tab will stay empty.\n\nPaste the original survey export at A1 first.\n\nExport anyway?"))return}
+const arr=activeRows();
+const out=arr.filter(w=>w&&w.some(x=>String(x==null?"":x).trim())).map(w=>Array.from(w,x=>x==null?"":String(x)));
+const fname=sheetMode==="trend"?"trend.json":"difficulties.json";
+if(out.length<2){alert("There is no data to export. Paste the sheet at A1 first.");return}
+const Cx=csCols(arr);
+if(sheetMode==="trend"&&(Cx.date<0||/^c\d+$/.test(String(out[1][0]||"")))){if(!confirm("Warning: the sheet has no date column (or it still holds data from an old export). The TREND charts will stay empty.\n\nPaste the original survey export at A1 first.\n\nExport anyway?"))return}
 const blob=new Blob([JSON.stringify({updated:Date.now(),rows:out})],{type:"application/json"});
-const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="difficulties.json";document.body.appendChild(a);a.click();a.remove();
+const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=fname;document.body.appendChild(a);a.click();a.remove();
 setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-alert("difficulties.json downloaded.\n\nUpload it to your GitHub repo (same folder as index.html) and replace the old file. Everyone will see the update after a few minutes.");
+alert(fname+" downloaded.\n\nUpload it to your GitHub repo (same folder as index.html) and replace the old file. Everyone will see the update after a few minutes.");
 };
 function loadCsat(){
 if(location.protocol==="file:")return;
 fetch("difficulties.json?v="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{
 if(!j||!Array.isArray(j.rows))return;
+if(isOldFmt(j.rows)){csOldPub=true;if($id("csat").classList.contains("on"))csRender();return}
 if((+j.updated||0)>=csLocalTs)cs.rows=j.rows;
-if($id("csat").classList.contains("on"))csRender();
+if($id("csat").classList.contains("on")&&csView!=="trend")csRender();
+}).catch(()=>{});
+}
+function loadTrend(){
+if(location.protocol==="file:")return;
+fetch("trend.json?v="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{
+if(!j||!Array.isArray(j.rows))return;
+if((+j.updated||0)>=trLocalTs)tr.rows=j.rows;
+if($id("csat").classList.contains("on")&&csView==="trend")csRender();
 }).catch(()=>{});
 }
 
@@ -820,4 +860,5 @@ if($id("ts").classList.contains("on"))renderTS();
 route();
 loadPublished();
 loadCsat();
+loadTrend();
 </script></body></html>
