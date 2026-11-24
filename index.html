@@ -310,13 +310,13 @@ const sp=v=>ok(v)?(v*100).toFixed(2)+"%":"—";
 const ab=n=>sp(abn(n));
 const pr=Math.round(pcnt*1e6)/1e6;
 const initial=ok(pr)?kpiAmt(pr):NaN;
-const q2=ok(pr)?initial>0:null;
+const q2=ok(pr)&&ok(take)?(take>=CFG.takeTarget&&initial>0):null;
 const ro=unlocked?"":" readonly";
 const inp=(id,v)=>`<input class="edit" type="text" inputmode="decimal" id="${id}" value="${raw[id]!==undefined?raw[id]:v}"${ro}>`;
 $id("kpi").innerHTML="<thead><tr><th>METRIC</th><th style='text-align:right'>ACTUAL</th><th style='text-align:right'>SCORE</th></tr></thead><tbody>"+
 `<tr><td>Days Worked</td><td class="v" colspan="2">${inp("dw",days.w)}</td></tr>`+
 `<tr><td>Days Scheduled</td><td class="v" colspan="2">${inp("ds",days.s)}</td></tr>`+
-row3("AHT",N(aht),sp(s[0]),above(aht,CFG.ahtTarget))+row3("CSAT",N(csat,2),sp(s[1]),below(csat,CFG.csatTarget))+row3("VRR",P(res),sp(s[2]),vrrC(res,cur))+row3("TRANSFER%",P(xfer),sp(s[3]),above(xfer,CFG.transferMax))+row3("P2P",P(pay),sp(s[4]),p2pC(pay))+
+row3("TAKE RATE",P(take),"",below(take,CFG.takeTarget))+row3("AHT",N(aht),sp(s[0]),above(aht,CFG.ahtTarget))+row3("CSAT",N(csat,2),sp(s[1]),below(csat,CFG.csatTarget))+row3("VRR",P(res),sp(s[2]),vrrC(res,cur))+row3("TRANSFER%",P(xfer),sp(s[3]),above(xfer,CFG.transferMax))+row3("P2P",P(pay),sp(s[4]),p2pC(pay))+
 `<tr><td>ABSENCE</td><td class="v">${inp("da",days.a)}</td><td class="v">${ab(days.a)}</td></tr><tr><td>LATE</td><td class="v">${inp("dl",days.l)}</td><td class="v">${ab(days.l)}</td></tr>`+
 row3("MULTIPLIER","",sp(mult))+row3("PERCENTAGE","",sp(pcnt))+row3("INITIAL KPI","",$(initial))+row3("FINAL KPI","",$(ok(initial)&&ok(mult)?mult*initial:NaN))+row3("QUALIFIED?","",badge(q2))+"</tbody>";
 const bind=(id,key,conv)=>{const el=$id(id);
