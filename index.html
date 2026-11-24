@@ -91,6 +91,12 @@ body::before,#picker::before,#lb::before,#ts::before,#csat::before{content:"";po
 .pwbtns{display:flex;justify-content:flex-end;margin-top:8px}
 @media(max-width:560px){.switch{position:static;margin-bottom:10px}}
 .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+.qwrap{position:relative;display:inline-block;cursor:help;outline:none}
+.qtip{display:none;position:absolute;right:0;bottom:calc(100% + 10px);z-index:10;min-width:240px;background:#111;border:1px solid var(--edge);border-radius:12px;padding:8px;box-shadow:0 8px 24px rgba(0,0,0,.6);text-align:left}
+.qwrap:hover .qtip,.qwrap:focus .qtip,.qwrap:focus-within .qtip{display:block}
+.ql{display:flex;justify-content:space-between;gap:14px;padding:7px 10px;border-radius:8px;font-size:12px;font-weight:700;margin:3px 0;white-space:nowrap}
+.ql.ok{background:#22c55e;color:#04210f}
+.ql.fail{background:var(--red);color:var(--text)}
 .qtog{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
  .qtog button {
   transition:
@@ -281,7 +287,8 @@ const above=(v,t)=>ok(v)&&v>t?"miss":"";
 const p2pC=v=>ok(v)&&v<CFG.p2pTarget?"miss":"";
 const xfC=v=>ok(v)&&v<CFG.xferSurveyRed?"red":"";
 const row3=(a,b,c,m)=>`<tr${m?' class="'+m+'"':''}><td>${a}</td><td class="v">${b}</td>${c===undefined?"":`<td class="v">${c}</td>`}</tr>`;
-const badge=q=>q===null?"—":`<span class="${q?"yes":"no"}">${q?"YES":"NO"}</span>`;
+const qline=(label,actual,need,pass)=>`<span class="ql ${pass?"ok":"fail"}"><span>${label}</span><span>${actual} (${need})</span></span>`;
+const badge=(q,det)=>q===null?"—":`<span class="qwrap" tabindex="0"><span class="${q?"yes":"no"}">${q?"YES":"NO"}</span>${det?`<span class="qtip">${det.join("")}</span>`:""}</span>`;
 const kpiAmt=p=>{for(const[t,a]of CFG.kpiBands)if(p>=t)return a;return 0};
 
 const raw={};
@@ -298,9 +305,10 @@ const miss=ok(pc)?(pc<CFG.acqTarget?CFG.acqTarget*ans-acq:0):NaN;
 let inc=NaN;if(ok(book)){inc=0;CFG.incentive.forEach(([k,v])=>{if(book>=k)inc=v})}
 const kick=ok(book)?Math.round(Math.max(book-CFG.kicker.start,0)*CFG.kicker.rate*CFG.kicker.fx*100)/100:NaN;
 const q1=ok(take)&&ok(csat)&&ok(pc)?(take>=CFG.takeTarget&&csat>=CFG.csatTarget&&pc>=CFG.acqTarget):null;
+const d1=[qline("Take rate",P(take),"min "+P(CFG.takeTarget),take>=CFG.takeTarget),qline("CSAT",N(csat,2),"min "+N(CFG.csatTarget,2),csat>=CFG.csatTarget),qline("$/call",$(pc),"min "+$(CFG.acqTarget),pc>=CFG.acqTarget)];
 $id("sales").innerHTML="<thead><tr><th>METRIC</th><th style='text-align:right'>VALUE</th></tr></thead><tbody>"+
 row3("ACQ",$(acq))+row3("RENEWAL",$(ren))+row3("TOTAL",$(tot))+
-row3("$/CALL",$(pc),undefined,pcC(pc))+row3("Missing ACQ (target $"+CFG.acqTarget.toFixed(2)+"/call)",$(miss),undefined,below(pc,CFG.acqTarget))+row3("INCENTIVES",$(inc))+row3("KICKER",$(kick))+row3("QUALIFIED?",badge(q1))+"</tbody>";
+row3("$/CALL",$(pc),undefined,pcC(pc))+row3("Missing ACQ (target $"+CFG.acqTarget.toFixed(2)+"/call)",$(miss),undefined,below(pc,CFG.acqTarget))+row3("INCENTIVES",$(inc))+row3("KICKER",$(kick))+row3("QUALIFIED?",badge(q1,d1))+"</tbody>";
 const W=CFG.weights;
 const s=[sc.aht(aht),sc.csat(csat),vrrScore(res,cur.key),sc.trf(xfer),sc.pay(pay)];
 const abn=n=>n===0?1:n===1?.75:n===2?.5:0;
@@ -311,6 +319,8 @@ const ab=n=>sp(abn(n));
 const pr=Math.round(pcnt*1e6)/1e6;
 const initial=ok(pr)?kpiAmt(pr):NaN;
 const q2=ok(pr)&&ok(take)?(take>=CFG.takeTarget&&initial>0):null;
+const d2=[qline("Take rate",P(take),"min "+P(CFG.takeTarget),take>=CFG.takeTarget)];
+if(ok(initial)&&initial<=0)d2.push(qline("Initial KPI",$(initial),"must be above $0",false));
 const ro=unlocked?"":" readonly";
 const inp=(id,v)=>`<input class="edit" type="text" inputmode="decimal" id="${id}" value="${raw[id]!==undefined?raw[id]:v}"${ro}>`;
 $id("kpi").innerHTML="<thead><tr><th>METRIC</th><th style='text-align:right'>ACTUAL</th><th style='text-align:right'>SCORE</th></tr></thead><tbody>"+
@@ -318,7 +328,7 @@ $id("kpi").innerHTML="<thead><tr><th>METRIC</th><th style='text-align:right'>ACT
 `<tr><td>Days Scheduled</td><td class="v" colspan="2">${inp("ds",days.s)}</td></tr>`+
 row3("TAKE RATE",P(take),"",below(take,CFG.takeTarget))+row3("AHT",N(aht),sp(s[0]),above(aht,CFG.ahtTarget))+row3("CSAT",N(csat,2),sp(s[1]),below(csat,CFG.csatTarget))+row3("VRR",P(res),sp(s[2]),vrrC(res,cur))+row3("TRANSFER%",P(xfer),sp(s[3]),above(xfer,CFG.transferMax))+row3("P2P",P(pay),sp(s[4]),p2pC(pay))+
 `<tr><td>ABSENCE</td><td class="v">${inp("da",days.a)}</td><td class="v">${ab(days.a)}</td></tr><tr><td>LATE</td><td class="v">${inp("dl",days.l)}</td><td class="v">${ab(days.l)}</td></tr>`+
-row3("MULTIPLIER","",sp(mult))+row3("PERCENTAGE","",sp(pcnt))+row3("INITIAL KPI","",$(initial))+row3("FINAL KPI","",$(ok(initial)&&ok(mult)?mult*initial:NaN))+row3("QUALIFIED?","",badge(q2))+"</tbody>";
+row3("MULTIPLIER","",sp(mult))+row3("PERCENTAGE","",sp(pcnt))+row3("INITIAL KPI","",$(initial))+row3("FINAL KPI","",$(ok(initial)&&ok(mult)?mult*initial:NaN))+row3("QUALIFIED?","",badge(q2,d2))+"</tbody>";
 const bind=(id,key,conv)=>{const el=$id(id);
  el.onclick=()=>{if(!unlocked)askPw(render)};
  el.oninput=()=>{if(!unlocked)return;const pos=el.selectionStart;raw[id]=el.value;setDay(key,conv(el.value));save();render();const n=$id(id);n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}};
