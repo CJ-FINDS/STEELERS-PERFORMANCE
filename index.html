@@ -275,7 +275,7 @@ if(k==="t")return v>=.97?1.1:v>=.94?1:v>=.92?.9:v>=.9?.8:v>=.871?.7:.5;
 if(k==="m")return v>=.93?1.1:v>=.9?1:v>=.88?.9:v>=.85?.8:v>=.82?.7:.5;
 return v>=.91?1.1:v>=.87?1:v>=.85?.9:v>=.82?.8:v>=.801?.7:.5};
 const vrrC=(v,a)=>!ok(v)?"":v<a.red?"miss":v<a.org?"orange":"";
-const pcC=v=>!ok(v)?"":v<CFG.acqTarget?"miss":v<CFG.acqTarget+.5?"orange":"";
+const pcC=v=>!ok(v)?"":v<CFG.acqTarget-.5?"miss":v<CFG.acqTarget?"orange":"";
 const below=(v,t)=>ok(v)&&v<t?"miss":"";
 const above=(v,t)=>ok(v)&&v>t?"miss":"";
 const p2pC=v=>ok(v)&&v<CFG.p2pTarget?"miss":"";
