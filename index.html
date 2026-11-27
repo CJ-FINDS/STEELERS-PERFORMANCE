@@ -124,6 +124,35 @@ body::before,#picker::before,#lb::before,#ts::before,#csat::before{content:"";po
   color: #000;
   border-color: var(--white);
 }
+ #champ{z-index:20;background:radial-gradient(ellipse at 50% 0%,#1f1800 0%,#000 62%);overflow:auto;align-items:flex-start}
+#cfCanvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:40;display:none}
+.chsub{text-align:center;color:var(--muted);font-size:13px;letter-spacing:.12em}
+.chmsg{text-align:center;font-size:clamp(15px,2.6vw,20px);font-weight:700;margin:10px 0 22px}
+.podium{display:flex;justify-content:center;align-items:flex-end;gap:clamp(8px,2vw,22px);margin:10px auto 28px;max-width:860px}
+.pod{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;text-align:center;animation:rise .8s cubic-bezier(.2,.9,.3,1.2) both}
+.pod.p1{flex:1.25;animation-delay:.6s}.pod.p2{animation-delay:.3s}.pod.p3{animation-delay:0s}
+@keyframes rise{from{opacity:0;transform:translateY(60px) scale(.85)}to{opacity:1;transform:none}}
+@keyframes float{50%{transform:translateY(-8px)}}
+@keyframes slide{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:none}}
+.tro{width:clamp(48px,10vw,84px);filter:drop-shadow(0 0 14px var(--glow));cursor:pointer}
+.p1 .tro{width:clamp(72px,15vw,130px);animation:float 3s ease-in-out infinite}
+.crown{font-size:clamp(22px,4vw,34px);line-height:1}
+.pname{font-weight:800;font-size:clamp(13px,2.4vw,18px);margin-top:8px;overflow-wrap:anywhere}
+.ptag{font-size:10px;letter-spacing:.14em;color:var(--muted)}
+.ppct{font-weight:800;font-size:clamp(15px,3vw,24px);font-variant-numeric:tabular-nums;margin:4px 0 8px}
+.block{width:100%;border-radius:14px 14px 0 0;display:flex;justify-content:center;padding-top:10px;font-weight:900;font-size:clamp(28px,6vw,48px);color:#000}
+.p1{--glow:rgba(255,200,40,.8)}.p1 .block{height:150px;background:linear-gradient(#ffe082,#c8960c)}.p1 .pname,.p1 .ppct{color:#ffe082}
+.p2{--glow:rgba(200,210,225,.6)}.p2 .block{height:110px;background:linear-gradient(#f4f6f8,#8e98a6)}
+.p3{--glow:rgba(205,127,50,.65)}.p3 .block{height:80px;background:linear-gradient(#eaa96c,#9a5a22)}
+.rows{max-width:860px;margin:0 auto;display:grid;gap:8px}
+.crow{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;background:var(--card);border:1px solid var(--soft);border-radius:14px;padding:11px 14px;position:relative;overflow:hidden;animation:slide .5s both}
+.crow .fill{position:absolute;inset:0 auto 0 0;background:rgba(255,255,255,.08)}
+.crow>:not(.fill){position:relative}
+.crow .rk{font-weight:900;font-size:18px;text-align:center;color:var(--muted)}
+.crow .nm{font-weight:700}
+.crow .pv{font-weight:800;font-variant-numeric:tabular-nums}
+.crow.top{border-color:var(--edge)}
+@media (prefers-reduced-motion:reduce){.pod,.crow,.p1 .tro{animation:none}}
 .qtog button{font:inherit;font-weight:800;font-size:12px;letter-spacing:.12em;color:var(--text);background:transparent;border:1px solid var(--edge);border-radius:10px;padding:9px 16px;cursor:pointer}
 .qtog button.on{background:var(--white);color:#000}
 .bars{display:flex;gap:10px;align-items:flex-end}
@@ -199,10 +228,20 @@ body::before,#picker::before,#lb::before,#ts::before,#csat::before{content:"";po
 <div class="lbgrid" id="tsGrid"></div>
 </div></div>
 
+<div class="modal" id="champ"><div class="lbwrap">
+<div class="lbtop"><h2>LEADERBOARD</h2><button class="switch" id="chBack" style="position:static">BACK</button></div>
+<div class="chsub">Ranked by KPI Percentage</div>
+<div class="chmsg" id="chMsg"></div>
+<div class="podium" id="chPodium"></div>
+<div class="rows" id="chRows"></div>
+<div class="lbbtns" style="margin-top:26px"><button class="lbbtn" id="chAgain">🎉 CELEBRATE AGAIN</button></div>
+</div></div>
+<canvas id="cfCanvas"></canvas>
+ 
 <div class="modal on" id="picker"><button class="switch left" id="toCsat2" style="position:fixed;top:calc(22px + env(safe-area-inset-top,0px));left:20px">SWITCH TO SURVEY DATA</button><div class="pick">
 <h1>PROGRESS STAT</h1>
 <h2>STEELERS MTD</h2>
-<div class="lbbtns"><button class="lbbtn" id="lbBtn">VIEW OUTLIERS</button><button class="lbbtn" id="tsBtn">VIEW TEAM SCORES</button></div>
+<div class="lbbtns"><button class="lbbtn" id="lbBtn">VIEW OUTLIERS</button><button class="lbbtn" id="tsBtn">VIEW TEAM SCORES</button><button class="lbbtn" id="chBtn">VIEW LEADERBOARD</button></div>
 <div id="groups"></div>
 </div></div>
 
@@ -350,15 +389,18 @@ function route(){
 let id=location.hash.replace(/^#/,"");try{id=decodeURIComponent(id)}catch(e){}
 cur=AGENTS.find(a=>a.id===id)||null;
 unlocked=false;
-const isLB=id==="leaderboards",isTS=id==="teamscores",isCS=id==="csat";
+const isLB=id==="leaderboards",isTS=id==="teamscores",isCS=id==="csat",isCH=id==="champions";
 $id("lb").classList.toggle("on",isLB);
 $id("ts").classList.toggle("on",isTS);
 $id("csat").classList.toggle("on",isCS);
+$id("champ").classList.toggle("on",isCH);
+if(!isCH)stopConfetti();
 $id("csModal").classList.remove("on");
 $id("modal").classList.remove("on");
 if(cur){$id("picker").classList.remove("on");render()}
 else if(isLB){$id("picker").classList.remove("on");renderLB()}
 else if(isTS){$id("picker").classList.remove("on");renderTS()}
+else if(isCH){$id("picker").classList.remove("on");renderChamp(true)}
 else if(isCS){$id("picker").classList.remove("on");csRender()}
 else{buildPicker();$id("picker").classList.add("on")}
 }
@@ -941,9 +983,68 @@ if(pubTs>=localTs)data=j.data;
 if(cur&&!$id("modal").classList.contains("on"))render();
 if($id("lb").classList.contains("on"))renderLB();
 if($id("ts").classList.contains("on"))renderTS();
+if($id("champ").classList.contains("on"))renderChamp(false);
 }).catch(()=>{});
 }
+/* ---------- LEADERBOARD ---------- */
+function kpiPct(a){
+const g=k=>num(k,a),d=effDays(a.id),W=CFG.weights;
+const s=[sc.aht(g("Voice Answered AHT")),sc.csat(g("Voice CSAT")),vrrScore(g("Voice Agent Resolution"),a.key),sc.trf(g("Voice Handled Transfer % (calibrated)")),sc.pay(g("Status - Pay to Performance"))];
+if(!s.every(ok))return NaN;
+const abn=n=>n===0?1:n===1?.75:n===2?.5:0;
+return s[1]*W.csat+s[0]*W.aht+s[2]*W.vrr+s[4]*W.p2p+s[3]*W.transfer+abn(d.a)*W.absence+abn(d.l)*W.late}
 
+const trophy=(k,c1,c2)=>`<svg viewBox="0 0 64 64" class="tro" data-celebrate><defs><linearGradient id="tg${k}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs><path d="M18 6h28v16a14 14 0 0 1-28 0z" fill="url(#tg${k})"/><path d="M18 11H8c0 10 5 16 12 17M46 11h10c0 10-5 16-12 17" fill="none" stroke="url(#tg${k})" stroke-width="3.5" stroke-linecap="round"/><rect x="28" y="34" width="8" height="12" fill="url(#tg${k})"/><rect x="20" y="46" width="24" height="8" rx="2" fill="url(#tg${k})"/><rect x="16" y="54" width="32" height="5" rx="2" fill="url(#tg${k})"/><path d="M32 11l2.4 5 5.4.7-4 3.7 1 5.3-4.8-2.6-4.8 2.6 1-5.3-4-3.7 5.4-.7z" fill="#fff" opacity=".55"/></svg>`;
+const TRO={1:["#fff1a8","#d19a00"],2:["#ffffff","#8e98a6"],3:["#f3b57a","#8a4d1b"]};
+
+function countUp(root){
+const els=root.querySelectorAll("[data-v]"),still=matchMedia("(prefers-reduced-motion:reduce)").matches,t0=performance.now();
+const step=t=>{const k=still?1:Math.min(1,(t-t0)/1400),e=1-Math.pow(1-k,3);
+ els.forEach(el=>{el.textContent=(el.dataset.v*e*100).toFixed(2)+"%"});
+ if(k<1)requestAnimationFrame(step)};
+requestAnimationFrame(step)}
+
+function renderChamp(celebrate){
+const list=AGENTS.map(a=>({a,p:kpiPct(a)})).filter(r=>ok(r.p)).sort((x,y)=>y.p-x.p||x.a.name.localeCompare(y.a.name));
+if(!list.length){$id("chMsg").textContent="No KPI data yet. Ask your supervisor to load the latest data.";$id("chPodium").innerHTML="";$id("chRows").innerHTML="";return}
+let prev=0;list.forEach((r,i)=>{const v=Math.round(r.p*1e4);r.rank=i&&v===prev.v?prev.rank:i+1;prev={v,rank:r.rank}});
+const first=list[0].a.name.split(" ")[0];
+$id("chMsg").innerHTML=`🎉 Congratulations, <span style="color:#ffe082">${esc(first)}</span>, our Champion! Every name here is helping the team win. 💪`;
+const pod=r=>{const n=r.rank>3?3:r.rank,t=TRO[n];
+ return `<div class="pod p${n}">${n===1?'<div class="crown">👑</div>':""}${trophy(n,t[0],t[1])}<div class="pname">${esc(r.a.name)}</div><div class="ptag">${r.a.tag}</div><div class="ppct" data-v="${r.p}">0.00%</div><div class="block">${r.rank}</div></div>`};
+const top=list.slice(0,3),ord=[top[1],top[0],top[2]].filter(Boolean);
+$id("chPodium").innerHTML=ord.map(pod).join("");
+const max=list[0].p;
+$id("chRows").innerHTML=list.slice(3).map((r,i)=>`<div class="crow" style="animation-delay:${.9+i*.06}s"><div class="fill" style="width:${Math.max(4,r.p/max*100)}%"></div><div class="rk">${r.rank}</div><div><div class="nm">${esc(r.a.name)}</div><div class="ptag">${r.a.tag}</div></div><div class="pv" data-v="${r.p}">0.00%</div></div>`).join("");
+countUp($id("champ"));
+if(celebrate)burst()}
+
+/* ---------- Confetti ---------- */
+let cf={raf:0,parts:[]};
+function stopConfetti(){cancelAnimationFrame(cf.raf);cf.raf=0;cf.parts=[];const c=$id("cfCanvas");c.style.display="none"}
+function burst(){
+if(matchMedia("(prefers-reduced-motion:reduce)").matches)return;
+const c=$id("cfCanvas"),ctx=c.getContext("2d"),dpr=devicePixelRatio||1,W=innerWidth,H=innerHeight;
+c.style.display="block";c.width=W*dpr;c.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
+const cols=["#ffd54a","#ff5d73","#4ade80","#60a5fa","#c084fc","#fb923c","#ffffff","#f472b6"],reach=Math.hypot(W,H)/2;
+const add=n=>{for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,v=(.25+Math.random()*.75)*reach*.045;
+ cf.parts.push({x:W/2,y:H/2,vx:Math.cos(a)*v,vy:Math.sin(a)*v,w:6+Math.random()*7,h:4+Math.random()*5,r:Math.random()*6,vr:(Math.random()-.5)*.4,wb:Math.random()*6,col:cols[i%cols.length],life:0,max:240+Math.random()*90,circ:Math.random()<.25})}};
+add(320);setTimeout(()=>add(180),380);
+let last=performance.now();
+const loop=now=>{const dt=Math.min(3,(now-last)/16.67);last=now;ctx.clearRect(0,0,W,H);
+ cf.parts=cf.parts.filter(p=>{p.life+=dt;if(p.life>p.max||p.y>H+30)return false;
+  const f=Math.pow(.965,dt);p.vx*=f;p.vy=p.vy*f+.09*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.r+=p.vr*dt;p.wb+=.15*dt;
+  ctx.globalAlpha=Math.min(1,(p.max-p.life)/50);ctx.fillStyle=p.col;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r);ctx.scale(1,Math.cos(p.wb));
+  if(p.circ){ctx.beginPath();ctx.arc(0,0,p.w/2,0,7);ctx.fill()}else ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+  ctx.restore();return true});
+ ctx.globalAlpha=1;
+ if(cf.parts.length||now-t0<600)cf.raf=requestAnimationFrame(loop);else stopConfetti()};
+const t0=performance.now();cancelAnimationFrame(cf.raf);cf.raf=requestAnimationFrame(loop)}
+
+$id("chBtn").onclick=()=>{location.hash="champions"};
+$id("chBack").onclick=()=>{location.hash=""};
+$id("chAgain").onclick=burst;
+$id("champ").addEventListener("click",e=>{if(e.target.closest("[data-celebrate]"))burst()});
 route();
 loadPublished();
 loadCsat();
